@@ -1,0 +1,181 @@
+\newcommand{\single}[1]{#1}
+\newcommand{\double}[1]{}
+
+\single{\documentclass[12pt,a4paper,oneside,german,english]{book}}
+\double{\documentclass[12pt,a4paper,twoside,german,english]{book}}
+
+\usepackage{parskip}
+\usepackage{subcaption}
+\usepackage{wrapfig}
+\usepackage{lipsum}
+
+\usepackage[english]{babel}
+\usepackage{setspace}
+\usepackage{float,times} 
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{amsmath,amsthm,latexsym}
+\usepackage{graphicx}
+\usepackage[normalem]{ulem}
+\usepackage{color}
+\usepackage{multirow}
+\usepackage[square,numbers]{natbib}
+\usepackage{listings}
+
+\newcommand\tab[1][1cm]{\hspace*{#1}}
+
+
+\lstset{
+	basicstyle=\ttfamily,
+	tabsize=4,
+	numbers=left,
+	columns=fullflexible,
+	showstringspaces=false,
+	commentstyle=\color{gray}\upshape
+}
+
+\renewcommand\lstlistingname{Listing}
+\renewcommand\lstlistlistingname{List of Codes}
+
+\renewcommand{\labelitemii}{$\circ$}
+
+% format page layout.
+%\usepackage[margin=15mm]{geometry}
+\setlength{\topmargin}{0cm}
+\setlength{\textwidth}{15cm}
+\setlength{\textheight}{22cm}
+\setlength{\oddsidemargin}{1cm}
+\setlength{\evensidemargin}{0cm}
+
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\fancyhead{} % clear all header fields
+\double{\fancyhead[LE]{\slshape \nouppercase{\leftmark}}} % chapter titles
+\fancyhead[RO]{\slshape \nouppercase{\rightmark}} % section titles
+\fancyfoot{} % clear all footer fields
+\fancyfoot[C]{\thepage}
+\setlength{\headheight}{15pt}
+
+\usepackage[colorlinks=false,plainpages=false,bookmarks=true,pdffitwindow,pdfcenterwindow=true,pdfstartview=Fit]{hyperref}
+
+\newcommand{\COMMENT}[1]{\textbf{\color{red}[#1]}}
+\newcommand{\COMMENTSUPERVISOR}[1]{\textbf{\color{blue}[#1]}}
+
+\begin{document}
+
+\thispagestyle{empty}
+
+\begin{center}
+  \mbox{}
+  \vspace{1cm} 
+  \Large{Multilevel Hardware Generation and Verification}
+%  \\ \COMMENT{Draft: \today}}
+  
+\normalsize  
+ 
+ \vspace{2.5cm} 
+Master Thesis\\
+  \vspace{3cm} 
+
+   Produced at\\Chair of Electronic Design Automation,\\
+   Department of Electrical and Computer Engineering\\
+   Technische Universität Kaiserslautern, Germany\\
+
+  \vspace{2cm} 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Put your name with current academic title and your place of birth here
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  by  \\
+  Harald Ovsthus \\
+
+  \vspace{2cm} 
+  Kaiserslautern, 2020 \\
+\end{center}
+\vspace{1cm} 
+
+\begin{tabular}[t]{l@{\hspace{1cm}}l}
+  Supervisors: 
+  & Prof. Dr.-Ing. Wolfgang Kunz \\ 
+  & Dipl.-Ing. Tobias Ludwig \\
+\end{tabular}
+
+\newpage
+\vspace*{\fill}
+\thispagestyle{empty}
+\mbox{}
+{\raggedright \newline
+
+\vspace{1cm}\textbf{Certification}
+
+I hereby declare that this submission is my own work and that I only used the resources specified.
+
+\vspace{3cm}
+Kaiserslautern, \today}
+\vspace*{\fill}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%Write a chapter with all the people you would like to thank and save it
+%as chp_thanks.tex. Then remove the '%' before \input{chp_thanks.tex}
+%\chapter{Acknowledgements}
+%\input{chp_thanks.tex}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Dedication page
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\newpage
+%\thispagestyle{empty}
+%\begin{center}
+%\mbox{}
+%\vspace{8cm}
+%{\large To whoever you want to dedicate}
+%\end{center}
+\tableofcontents
+
+\mainmatter
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\chapter{Introduction}
+\label{chap:intro}
+\input{introduction.tex}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\chapter{Theoretical background}
+\label{chap:theory}
+\input{theory.tex}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\chapter{Implementation}
+\label{chap:implementation}
+\input{implementation.tex}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% \chapter{Performance analysis}
+% \label{chap:performance}
+% \input{performance_analysis.tex}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\chapter{Summary and outlook}
+\label{chap:summary}
+\input{summary_and_outlook.tex}
+
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%if you have an appendix put it here
+%\begin{appendix}
+%   \chapter{Xxx}\label{app:xxx}
+%   \input{app_Xxx.tex}
+%\end{appendix}
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\backmatter
+\listoftables
+\listoffigures 
+%\lstlistoflistings
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\bibliographystyle{unsrtnat}
+\bibliography{literature}
+
+\end{document}
+

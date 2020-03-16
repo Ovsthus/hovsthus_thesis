@@ -1,0 +1,9 @@
+ESL:
+
+1 masters 4 slaves with cport for 10000000 transfers: 273s 
+                                   1000000 transfers:  20s
+
+1 master 4 slaves without cport for 1000000 transfers: 26s
+
+
+1 master 4 slaves with shared ports for 1000000 transfers: 30s

@@ -1,0 +1,50 @@
+This is BibTeX, Version 0.99d (TeX Live 2017/Debian)
+Capacity: max_strings=100000, hash_size=100000, hash_prime=85009
+The top-level auxiliary file: ovsthus_mst.aux
+The style file: unsrtnat.bst
+Database file #1: literature.bib
+Warning--empty year in descam
+Warning--empty year in onespin
+Warning--empty year in ahbsys
+You've used 12 entries,
+            2481 wiz_defined-function locations,
+            621 strings with 6253 characters,
+and the built_in function-call counts, 3526 in all, are:
+= -- 320
+> -- 92
+< -- 6
++ -- 50
+- -- 26
+* -- 206
+:= -- 474
+add.period$ -- 37
+call.type$ -- 12
+change.case$ -- 23
+chr.to.int$ -- 12
+cite$ -- 21
+duplicate$ -- 202
+empty$ -- 402
+format.name$ -- 36
+if$ -- 811
+int.to.chr$ -- 1
+int.to.str$ -- 13
+missing$ -- 3
+newline$ -- 69
+num.names$ -- 18
+pop$ -- 140
+preamble$ -- 1
+purify$ -- 12
+quote$ -- 0
+skip$ -- 141
+stack$ -- 0
+substring$ -- 95
+swap$ -- 43
+text.length$ -- 2
+text.prefix$ -- 0
+top$ -- 0
+type$ -- 84
+warning$ -- 3
+while$ -- 18
+width$ -- 0
+write$ -- 153
+(There were 3 warnings)

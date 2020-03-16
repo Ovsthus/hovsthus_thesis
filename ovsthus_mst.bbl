@@ -1,0 +1,81 @@
+\begin{thebibliography}{12}
+\providecommand{\natexlab}[1]{#1}
+\providecommand{\url}[1]{\texttt{#1}}
+\expandafter\ifx\csname urlstyle\endcsname\relax
+  \providecommand{\doi}[1]{doi: #1}\else
+  \providecommand{\doi}{doi: \begingroup \urlstyle{rm}\Url}\fi
+
+\bibitem[Urdahl et~al.(2014)Urdahl, Stoffel, and Kunz]{2014-UrdahlStoffel.etal}
+Joakim Urdahl, Dominik Stoffel, and Wolfgang Kunz.
+\newblock Path predicate abstraction for sound system-level models of
+  {RT}-level circuit designs.
+\newblock \emph{IEEE Transactions On Computer-Aided Design of Integrated
+  Circuits and Systems (TCAD)}, 33\penalty0 (2):\penalty0 291--304, Feb. 2014.
+
+\bibitem[{Ludwig} et~al.(2019){Ludwig}, {Urdahl}, {Stoffel}, and
+  {Kunz}]{pddref}
+T.~{Ludwig}, J.~{Urdahl}, D.~{Stoffel}, and W.~{Kunz}.
+\newblock Properties first – correct-by-construction rtl design in
+  system-level design flows.
+\newblock \emph{IEEE Transactions on Computer-Aided Design of Integrated
+  Circuits and Systems}, pages 1--1, 2019.
+\newblock ISSN 1937-4151.
+\newblock \doi{10.1109/TCAD.2019.2921319}.
+
+\bibitem[Ludwig()]{descam}
+Tobias Ludwig.
+\newblock \emph{Design from SystemC Abstract Models}.
+\newblock Techniche Universität Kaiserslautern.
+
+\bibitem[{Onespin Solutions GmbH}()]{onespin}
+{Onespin Solutions GmbH}.
+\newblock {OneSpin 360 DV-Verify}.
+\newblock https://www.onespin.com/products/360-dv-verify/.
+
+\bibitem[Bormann and Busch(2005)]{bormannbusch}
+J{\"o}rg Bormann and Holger Busch.
+\newblock {Verfahren zur Bestimmung der G\"ute einer Menge von Eigenschaften
+  (Method for determining the quality of a set of properties)}.
+\newblock European Patent Application, Publication Number EP1764715, 09 2005.
+
+\bibitem[gap(2020)]{gapfree}
+Gapfreeverification guide (itl).
+\newblock Onespin documentation, 2020.
+
+\bibitem[clu(2020)]{clust}
+Gapfreeverification guide (itl).
+\newblock Onespin documentation, 2020.
+
+\bibitem[{Nguyen Son Lam} and {Nguyen}(2014)]{ahbformal}
+{Nguyen Son Lam} and D.~M. {Nguyen}.
+\newblock Ahb-master controller formal compliance verification.
+\newblock In \emph{2014 IEEE Fifth International Conference on Communications
+  and Electronics (ICCE)}, pages 340--345, July 2014.
+\newblock \doi{10.1109/CCE.2014.6916727}.
+
+\bibitem[amb(1999)]{amba}
+Amba specification.
+\newblock Available at:
+  https://developer.arm.com/docs/ihi0011/a/amba-specification-rev-20, 1999.
+\newblock Accessed: 20/02/2020.
+
+\bibitem[amb(2006)]{amba3}
+Amba 3 ahblite protocol.
+\newblock Available at:
+  http://www.eecs.umich.edu/courses/eecs373/readings/ARM_IHI0033A_AMBA_AHB-Lite_SPEC.pdf,
+  2006.
+\newblock Accessed: 21/02/2020.
+
+\bibitem[amb(2007)]{ambacomp}
+Amba design kit.
+\newblock Available at:
+  http://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.ddi0243c/I1024350.html,
+  2007.
+\newblock Accessed: 20/02/2020.
+
+\bibitem[ahb()]{ahbsys}
+Ahb system generator.
+\newblock https://opencores.org/projects/ahb_system_generator.
+\newblock Accessed: 2019-11-12.
+
+\end{thebibliography}
