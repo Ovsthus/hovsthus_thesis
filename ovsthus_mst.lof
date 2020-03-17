@@ -3,15 +3,15 @@
 \addvspace {10\p@ }
 \contentsline {figure}{\numberline {2.1}{\ignorespaces Example operation property\relax }}{4}{figure.caption.2}
 \contentsline {figure}{\numberline {2.2}{\ignorespaces Parallel dataflow\relax }}{6}{figure.caption.4}
-\contentsline {figure}{\numberline {2.4}{\ignorespaces An overview of AHB interconnect, reprinted from \cite {amba}. The mux outputs are referred to as address or data buses.\relax }}{10}{figure.caption.6}
-\contentsline {figure}{\numberline {2.5}{\ignorespaces Master and slave signals, reprint from left:\cite {amba} right:\cite {amba3}. AHBLite slaves are compatible with AHB systems\cite {ambacomp}. \textbf {HRESP[1:1]} is therefore hardwired to 0.\relax }}{11}{figure.caption.7}
-\contentsline {figure}{\numberline {2.6}{\ignorespaces A transfer with wait states, modified reprint from \cite {amba}. In this document the letters represent different masters\relax }}{12}{figure.caption.9}
+\contentsline {figure}{\numberline {2.4}{\ignorespaces An overview of AHB interconnect, reprinted from \cite {amba}. The mux outputs are referred to as address or data buses.\relax }}{11}{figure.caption.6}
+\contentsline {figure}{\numberline {2.5}{\ignorespaces Master and slave signals, reprint from left:\cite {amba} right:\cite {amba3}. AHBLite slaves are compatible with AHB systems\cite {ambacomp}. \textbf {HRESP[1:1]} is therefore hardwired to 0.\relax }}{12}{figure.caption.7}
+\contentsline {figure}{\numberline {2.6}{\ignorespaces A transfer with wait states, modified reprint from \cite {amba}. In this document the letters represent different masters\relax }}{13}{figure.caption.9}
 \addvspace {10\p@ }
-\contentsline {figure}{\numberline {3.1}{\ignorespaces Hardware toplevel with 3 masters and 3 slaves connected\relax }}{16}{figure.caption.13}
-\contentsline {figure}{\numberline {3.2}{\ignorespaces Master agent FSM\relax }}{18}{figure.caption.17}
-\contentsline {figure}{\numberline {3.3}{\ignorespaces Master agent FSM\relax }}{18}{figure.caption.19}
-\contentsline {figure}{\numberline {3.4}{\ignorespaces ESL toplevel with 2 masters and 3 slaves connected\relax }}{20}{figure.caption.20}
-\contentsline {figure}{\numberline {3.5}{\ignorespaces Abstract CSM\relax }}{21}{figure.caption.21}
-\contentsline {figure}{\numberline {3.6}{\ignorespaces Detailed data state CSM\relax }}{21}{figure.caption.21}
-\contentsline {figure}{\numberline {3.7}{\ignorespaces Illistration of port connection\relax }}{24}{figure.caption.23}
+\contentsline {figure}{\numberline {3.1}{\ignorespaces Hardware toplevel with 3 masters and 3 slaves connected\relax }}{17}{figure.caption.13}
+\contentsline {figure}{\numberline {3.2}{\ignorespaces Master agent FSM\relax }}{19}{figure.caption.17}
+\contentsline {figure}{\numberline {3.3}{\ignorespaces Master agent FSM\relax }}{19}{figure.caption.19}
+\contentsline {figure}{\numberline {3.4}{\ignorespaces ESL toplevel with 2 masters and 3 slaves connected\relax }}{21}{figure.caption.20}
+\contentsline {figure}{\numberline {3.5}{\ignorespaces Abstract CSM\relax }}{22}{figure.caption.21}
+\contentsline {figure}{\numberline {3.6}{\ignorespaces Detailed data state CSM\relax }}{22}{figure.caption.21}
+\contentsline {figure}{\numberline {3.7}{\ignorespaces Illistration of port connection\relax }}{25}{figure.caption.23}
 \addvspace {10\p@ }
