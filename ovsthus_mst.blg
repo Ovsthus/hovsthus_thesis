@@ -6,45 +6,45 @@ Database file #1: literature.bib
 Warning--empty year in descam
 Warning--empty year in onespin
 Warning--empty year in ahbsys
-You've used 12 entries,
+You've used 11 entries,
             2481 wiz_defined-function locations,
-            621 strings with 6253 characters,
-and the built_in function-call counts, 3526 in all, are:
-= -- 320
-> -- 92
-< -- 6
-+ -- 50
-- -- 26
-* -- 206
-:= -- 474
-add.period$ -- 37
-call.type$ -- 12
-change.case$ -- 23
-chr.to.int$ -- 12
-cite$ -- 21
-duplicate$ -- 202
-empty$ -- 402
-format.name$ -- 36
-if$ -- 811
+            614 strings with 6041 characters,
+and the built_in function-call counts, 3012 in all, are:
+= -- 271
+> -- 77
+< -- 4
++ -- 44
+- -- 22
+* -- 174
+:= -- 407
+add.period$ -- 33
+call.type$ -- 11
+change.case$ -- 21
+chr.to.int$ -- 11
+cite$ -- 20
+duplicate$ -- 171
+empty$ -- 351
+format.name$ -- 29
+if$ -- 687
 int.to.chr$ -- 1
-int.to.str$ -- 13
-missing$ -- 3
-newline$ -- 69
-num.names$ -- 18
-pop$ -- 140
+int.to.str$ -- 12
+missing$ -- 2
+newline$ -- 63
+num.names$ -- 15
+pop$ -- 129
 preamble$ -- 1
-purify$ -- 12
+purify$ -- 11
 quote$ -- 0
-skip$ -- 141
+skip$ -- 117
 stack$ -- 0
-substring$ -- 95
-swap$ -- 43
-text.length$ -- 2
+substring$ -- 65
+swap$ -- 30
+text.length$ -- 1
 text.prefix$ -- 0
 top$ -- 0
-type$ -- 84
+type$ -- 77
 warning$ -- 3
-while$ -- 18
+while$ -- 14
 width$ -- 0
-write$ -- 153
+write$ -- 138
 (There were 3 warnings)

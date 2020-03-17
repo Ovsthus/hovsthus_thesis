@@ -1,4 +1,4 @@
-\begin{thebibliography}{12}
+\begin{thebibliography}{11}
 \providecommand{\natexlab}[1]{#1}
 \providecommand{\url}[1]{\texttt{#1}}
 \expandafter\ifx\csname urlstyle\endcsname\relax
@@ -45,13 +45,6 @@ Gapfreeverification guide (itl).
 \bibitem[clu(2020)]{clust}
 Gapfreeverification guide (itl).
 \newblock Onespin documentation, 2020.
-
-\bibitem[{Nguyen Son Lam} and {Nguyen}(2014)]{ahbformal}
-{Nguyen Son Lam} and D.~M. {Nguyen}.
-\newblock Ahb-master controller formal compliance verification.
-\newblock In \emph{2014 IEEE Fifth International Conference on Communications
-  and Electronics (ICCE)}, pages 340--345, July 2014.
-\newblock \doi{10.1109/CCE.2014.6916727}.
 
 \bibitem[amb(1999)]{amba}
 Amba specification.

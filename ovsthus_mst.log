@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.18 (TeX Live 2017/Debian) (preloaded format=pdflatex 2019.10.23)  12 MAR 2020 14:33
+This is pdfTeX, Version 3.14159265-2.6-1.40.18 (TeX Live 2017/Debian) (preloaded format=pdflatex 2019.10.23)  17 MAR 2020 14:10
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -919,7 +919,7 @@ Underfull \hbox (badness 10000) in paragraph at lines 43--46
  []
 
 [5]
-<figs/Verif/parallell.png, id=201, 355.3275pt x 316.18124pt>
+<figs/Verif/parallell.png, id=206, 355.3275pt x 316.18124pt>
 File: figs/Verif/parallell.png Graphic file (type png)
 <use figs/Verif/parallell.png>
 Package pdftex.def Info: figs/Verif/parallell.png  used on input line 51.
@@ -935,12 +935,12 @@ Underfull \hbox (badness 10000) in paragraph at lines 64--65
  []
 
 [6 <./figs/Verif/parallell.png>]
-<figs/opcoloring.png, id=213, 341.275pt x 353.32pt>
+<figs/opcoloring.png, id=218, 341.275pt x 353.32pt>
 File: figs/opcoloring.png Graphic file (type png)
 <use figs/opcoloring.png>
 Package pdftex.def Info: figs/opcoloring.png  used on input line 70.
 (pdftex.def)             Requested size: 170.71393pt x 176.74043pt.
-<figs/ppa.png, id=214, 173.64874pt x 143.53625pt>
+<figs/ppa.png, id=219, 173.64874pt x 143.53625pt>
 File: figs/ppa.png Graphic file (type png)
 <use figs/ppa.png>
 Package pdftex.def Info: figs/ppa.png  used on input line 74.
@@ -959,18 +959,18 @@ Underfull \hbox (badness 10000) in paragraph at lines 91--94
  []
 
 [8]
-<figs/AHB/AHB_connections.png, id=235, 855.195pt x 856.19875pt>
+<figs/AHB/AHB_connections.png, id=240, 855.195pt x 856.19875pt>
 File: figs/AHB/AHB_connections.png Graphic file (type png)
 <use figs/AHB/AHB_connections.png>
 Package pdftex.def Info: figs/AHB/AHB_connections.png  used on input line 123.
 (pdftex.def)             Requested size: 341.43436pt x 341.83327pt.
  [9] [10 <./figs/AHB/AHB_connections.png>]
-<figs/AHB/master_signals.png, id=252, 780.9175pt x 439.6425pt>
+<figs/AHB/master_signals.png, id=257, 780.9175pt x 439.6425pt>
 File: figs/AHB/master_signals.png Graphic file (type png)
 <use figs/AHB/master_signals.png>
 Package pdftex.def Info: figs/AHB/master_signals.png  used on input line 134.
 (pdftex.def)             Requested size: 170.71393pt x 96.10446pt.
-<figs/AHB/slave_lite.png, id=253, 534.99875pt x 275.0275pt>
+<figs/AHB/slave_lite.png, id=258, 534.99875pt x 275.0275pt>
 File: figs/AHB/slave_lite.png Graphic file (type png)
 <use figs/AHB/slave_lite.png>
 Package pdftex.def Info: figs/AHB/slave_lite.png  used on input line 138.
@@ -981,7 +981,7 @@ Underfull \hbox (badness 10000) in paragraph at lines 146--147
  []
 
 [11 <./figs/AHB/master_signals.png> <./figs/AHB/slave_lite.png>]
-<figs/AHB/transfer.png, id=269, 1353.055pt x 718.685pt>
+<figs/AHB/transfer.png, id=274, 1353.055pt x 718.685pt>
 File: figs/AHB/transfer.png Graphic file (type png)
 <use figs/AHB/transfer.png>
 Package pdftex.def Info: figs/AHB/transfer.png  used on input line 156.
@@ -1008,110 +1008,130 @@ Overfull \hbox (8.6697pt too wide) in paragraph at lines 189--202
 
 ) [13] [14]
 Chapter 3.
-(./implementation.tex
-
-LaTeX Warning: Reference `sec:simulation' on page 15 undefined on input line 2.
-
-
-[15
+(./implementation.tex [15
 
 ]
-<figs/hw/Hw_toplevel.png, id=298, 721.69624pt x 532.99126pt>
+<figs/hw/Hw_toplevel.png, id=308, 721.69624pt x 532.99126pt>
 File: figs/hw/Hw_toplevel.png Graphic file (type png)
 <use figs/hw/Hw_toplevel.png>
 Package pdftex.def Info: figs/hw/Hw_toplevel.png  used on input line 9.
 (pdftex.def)             Requested size: 341.43436pt x 252.15688pt.
  [16 <./figs/hw/Hw_toplevel.png>]
 
-LaTeX Warning: Reference `subsec:sysppa' on page 17 undefined on input line 24.
-
-
-
-Package caption Warning: \label without proper reference on input line 29.
+Package caption Warning: \label without proper reference on input line 23.
 See the caption package documentation for explanation.
 
 
-LaTeX Warning: Reference `tab:mpayload' on page 17 undefined on input line 27.
+LaTeX Warning: Reference `tab:mpayload' on page 17 undefined on input line 21.
 
-<figs/hw/mAgent_FSM.png, id=312, 410.53375pt x 309.155pt>
+
+Overfull \hbox (27.92722pt too wide) in paragraph at lines 24--37
+[][] 
+ []
+
+<figs/hw/mAgent_FSM.png, id=320, 410.53375pt x 309.155pt>
 File: figs/hw/mAgent_FSM.png Graphic file (type png)
 <use figs/hw/mAgent_FSM.png>
-Package pdftex.def Info: figs/hw/mAgent_FSM.png  used on input line 49.
+Package pdftex.def Info: figs/hw/mAgent_FSM.png  used on input line 43.
 (pdftex.def)             Requested size: 156.49014pt x 117.84334pt.
 
-Underfull \hbox (badness 10000) in paragraph at lines 46--51
+Underfull \hbox (badness 10000) in paragraph at lines 40--45
 
  []
 
-[17]
-Underfull \hbox (badness 10000) in paragraph at lines 53--56
+
+Underfull \hbox (badness 10000) in paragraph at lines 47--50
 
  []
 
-<figs/hw/sAgent_FSM.png, id=320, 411.5375pt x 350.30875pt>
+[17 <./figs/hw/mAgent_FSM.png>]
+<figs/hw/sAgent_FSM.png, id=328, 411.5375pt x 350.30875pt>
 File: figs/hw/sAgent_FSM.png Graphic file (type png)
 <use figs/hw/sAgent_FSM.png>
-Package pdftex.def Info: figs/hw/sAgent_FSM.png  used on input line 61.
+Package pdftex.def Info: figs/hw/sAgent_FSM.png  used on input line 55.
 (pdftex.def)             Requested size: 156.49014pt x 133.20422pt.
 
-Underfull \hbox (badness 10000) in paragraph at lines 65--68
+Underfull \hbox (badness 10000) in paragraph at lines 59--62
 
  []
 
-[18 <./figs/hw/mAgent_FSM.png> <./figs/hw/sAgent_FSM.png>] [19]
-<figs/ESL/Syslev.png, id=336, 663.47874pt x 392.46625pt>
+[18 <./figs/hw/sAgent_FSM.png>] [19]
+<figs/ESL/Syslev.png, id=341, 663.47874pt x 392.46625pt>
 File: figs/ESL/Syslev.png Graphic file (type png)
 <use figs/ESL/Syslev.png>
-Package pdftex.def Info: figs/ESL/Syslev.png  used on input line 74.
+Package pdftex.def Info: figs/ESL/Syslev.png  used on input line 68.
 (pdftex.def)             Requested size: 341.43436pt x 201.96965pt.
- [20 <./figs/ESL/Syslev.png>]
-<figs/ESL/Bus_fsm_new.png, id=343, 323.2075pt x 450.68375pt>
+
+
+Package natbib Warning: Citation `ahbformal' on page 20 undefined on input line
+ 77.
+
+[20 <./figs/ESL/Syslev.png>]
+<figs/ESL/Bus_fsm_new.png, id=348, 323.2075pt x 450.68375pt>
 File: figs/ESL/Bus_fsm_new.png Graphic file (type png)
 <use figs/ESL/Bus_fsm_new.png>
-Package pdftex.def Info: figs/ESL/Bus_fsm_new.png  used on input line 91.
+Package pdftex.def Info: figs/ESL/Bus_fsm_new.png  used on input line 83.
 (pdftex.def)             Requested size: 161.60335pt x 225.34131pt.
-<figs/ESL/Data_state.png, id=344, 171.64125pt x 462.72874pt>
+<figs/ESL/Data_state.png, id=349, 171.64125pt x 462.72874pt>
 File: figs/ESL/Data_state.png Graphic file (type png)
 <use figs/ESL/Data_state.png>
-Package pdftex.def Info: figs/ESL/Data_state.png  used on input line 97.
+Package pdftex.def Info: figs/ESL/Data_state.png  used on input line 89.
 (pdftex.def)             Requested size: 85.8204pt x 231.3638pt.
-LaTeX Font Info:    Try loading font information for OMS+lmr on input line 105.
-
+LaTeX Font Info:    Try loading font information for OMS+lmr on input line 97.
  (/usr/share/texmf/tex/latex/lm/omslmr.fd
 File: omslmr.fd 2009/10/30 v1.6 Font defs for Latin Modern
 )
 LaTeX Font Info:    Font shape `OMS/lmr/m/n' in size <12> not available
-(Font)              Font shape `OMS/lmsy/m/n' tried instead on input line 105.
+(Font)              Font shape `OMS/lmsy/m/n' tried instead on input line 97.
  [21 <./figs/ESL/Bus_fsm_new.png> <./figs/ESL/Data_state.png>]
-
-LaTeX Warning: Reference `subsec:sysppa' on page 22 undefined on input line 121
-.
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 119--122
+Underfull \hbox (badness 10000) in paragraph at lines 111--114
 
  []
 
+
+Overfull \hbox (12.63496pt too wide) in paragraph at lines 115--116
+[]\T1/lmr/m/it/12 Shared\T1/lmr/m/n/12 : Ex-plicit syn-chro-niza-tion is needed
+ to en-sure that the value of \T1/lmr/bx/n/12 HREADY
+ []
+
 [22]
-
-LaTeX Warning: Reference `subsec:sysppa' on page 23 undefined on input line 125
-.
-
-[23]
-<figs/ESL/port_diagram.png, id=364, 492.84125pt x 386.44376pt>
+<figs/ESL/port_diagram.png, id=365, 492.84125pt x 386.44376pt>
 File: figs/ESL/port_diagram.png Graphic file (type png)
 <use figs/ESL/port_diagram.png>
-Package pdftex.def Info: figs/ESL/port_diagram.png  used on input line 129.
+Package pdftex.def Info: figs/ESL/port_diagram.png  used on input line 126.
 (pdftex.def)             Requested size: 156.49014pt x 122.70337pt.
-) [24 <./figs/ESL/port_diagram.png>]
+ [23]
+<figs/ESL/mAgent_ESL.png, id=372, 398.48875pt x 309.155pt>
+File: figs/ESL/mAgent_ESL.png Graphic file (type png)
+<use figs/ESL/mAgent_ESL.png>
+Package pdftex.def Info: figs/ESL/mAgent_ESL.png  used on input line 134.
+(pdftex.def)             Requested size: 156.49014pt x 121.40492pt.
+
+Underfull \hbox (badness 10000) in paragraph at lines 137--139
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 137--139
+
+ []
+
+[24 <./figs/ESL/port_diagram.png> <./figs/ESL/mAgent_ESL.png>]
+! Misplaced \noalign.
+\hline ->\noalign 
+                  {\ifnum 0=`}\fi \hrule \@height \arrayrulewidth \futurelet...
+l.146   \hline
+              
+? 
+) [25]
 Chapter 4.
-(./summary_and_outlook.tex) [25
+(./summary_and_outlook.tex) [26
 
 ] (./ovsthus_mst.lot)
 \tf@lot=\write5
 \openout5 = `ovsthus_mst.lot'.
 
- [26
+ [27
 
 
 ] (./ovsthus_mst.lof)
@@ -1119,7 +1139,7 @@ Chapter 4.
 \openout6 = `ovsthus_mst.lof'.
 
 
-(./ovsthus_mst.bbl [27
+(./ovsthus_mst.bbl [28
 
 ]
 Underfull \hbox (badness 10000) in paragraph at lines 31--34
@@ -1127,7 +1147,7 @@ Underfull \hbox (badness 10000) in paragraph at lines 31--34
  []
 
 
-Overfull \hbox (25.26317pt too wide) in paragraph at lines 57--61
+Overfull \hbox (25.26317pt too wide) in paragraph at lines 50--54
 []\T1/lmr/m/n/12 Amba spec-i-fi-ca-tion.  Avail-able at: https://developer.arm.
 com/docs/ihi0011/a/amba-
  []
@@ -1135,29 +1155,29 @@ com/docs/ihi0011/a/amba-
 ! Missing $ inserted.
 <inserted text> 
                 $
-l.65 ...cs.umich.edu/courses/eecs373/readings/ARM_
+l.58 ...cs.umich.edu/courses/eecs373/readings/ARM_
                                                   IHI0033A_AMBA_AHB-Lite_SPE...
 
 ? 
 ! Missing $ inserted.
 <inserted text> 
                 $
-l.68 
+l.61 
      
 ? 
 ! Missing } inserted.
 <inserted text> 
                 }
-l.68 
+l.61 
      
 ? 
 
-Underfull \hbox (badness 10000) in paragraph at lines 63--68
+Underfull \hbox (badness 10000) in paragraph at lines 56--61
 []\T1/lmr/m/n/12 Amba 3 ah-blite pro-to-col.  Avail-able at:
  []
 
 
-Overfull \hbox (36.03697pt too wide) in paragraph at lines 63--68
+Overfull \hbox (36.03697pt too wide) in paragraph at lines 56--61
 \T1/lmr/m/n/12 http://www.eecs.umich.edu/courses/eecs373/readings/ARM$[]\OML/lm
 m/m/it/12 HI\OT1/lmr/m/n/12 0033\OML/lmm/m/it/12 A[]MBA[]HB \OMS/lmsy/m/n/12 ^^
 @
@@ -1166,11 +1186,11 @@ m/m/it/12 HI\OT1/lmr/m/n/12 0033\OML/lmm/m/it/12 A[]MBA[]HB \OMS/lmsy/m/n/12 ^^
 ! Extra }, or forgotten \endgroup.
 \par ...m \@noitemerr {\@@par }\fi \else {\@@par }
                                                   \fi 
-l.68 
+l.61 
      
 ? 
 
-Overfull \hbox (184.47314pt too wide) in paragraph at lines 70--75
+Overfull \hbox (184.47314pt too wide) in paragraph at lines 63--68
 []\T1/lmr/m/n/12 Amba de-sign kit.  Avail-able at: http://infocenter.arm.com/he
 lp/index.jsp?topic=/com.arm.doc.ddi0243c/I1024350.html,
  []
@@ -1178,45 +1198,47 @@ lp/index.jsp?topic=/com.arm.doc.ddi0243c/I1024350.html,
 ! Missing $ inserted.
 <inserted text> 
                 $
-l.78 \newblock https://opencores.org/projects/ahb_
+l.71 \newblock https://opencores.org/projects/ahb_
                                                   system_generator.
 ? 
 ! Missing $ inserted.
 <inserted text> 
                 $
-l.80 
+l.73 
      
 ? 
 ! Missing } inserted.
 <inserted text> 
                 }
-l.80 
+l.73 
      
 ? 
 
-Overfull \hbox (14.46428pt too wide) in paragraph at lines 77--80
+Overfull \hbox (14.46428pt too wide) in paragraph at lines 70--73
 []\T1/lmr/m/n/12 Ahb sys-tem gen-er-a-tor.  https://opencores.org/projects/ahb$
 []\OML/lmm/m/it/12 ystem[]enerator: Accessed \OT1/lmr/m/n/12 :
  []
 
-[28
-
-]
 ! Extra }, or forgotten \endgroup.
 \par ...m \@noitemerr {\@@par }\fi \else {\@@par }
                                                   \fi 
-l.80 
+l.73 
      
 ? 
 )
+
+Package natbib Warning: There were undefined citations.
+
 Package atveryend Info: Empty hook `BeforeClearDocument' on input line 180.
- [29]
+[29
+
+]
 Package atveryend Info: Empty hook `AfterLastShipout' on input line 180.
  (./ovsthus_mst.aux)
 Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 180.
 Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 180.
 Package rerunfilecheck Info: File `ovsthus_mst.out' has not changed.
-(rerunfilecheck)             Checksum: 0DE9DE6364762809E0202C086BF3DB63;1522.
+(rerunfilecheck)             Checksum: D46A2504C9D09A43FB20ABAFA2990C2E;1590.
 
 
 LaTeX Warning: There were undefined references.
@@ -1227,10 +1249,10 @@ LaTeX Warning: There were multiply-defined labels.
 Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 180.
  ) 
 Here is how much of TeX's memory you used:
- 10785 strings out of 494923
- 154082 string characters out of 6180741
- 341464 words of memory out of 5000000
- 13771 multiletter control sequences out of 15000+600000
+ 10788 strings out of 494923
+ 154180 string characters out of 6180741
+ 340548 words of memory out of 5000000
+ 13774 multiletter control sequences out of 15000+600000
  50665 words of font info for 41 fonts, out of 8000000 for 9000
  14 hyphenation exceptions out of 8191
  42i,11n,46p,1990b,1128s stack positions out of 5000i,500n,10000p,200000b,80000s
@@ -1244,10 +1266,10 @@ type1/public/lm/lmr17.pfb></usr/share/texmf/fonts/type1/public/lm/lmr8.pfb></us
 r/share/texmf/fonts/type1/public/lm/lmri12.pfb></usr/share/texmf/fonts/type1/pu
 blic/lm/lmro12.pfb></usr/share/texmf/fonts/type1/public/lm/lmsy10.pfb></usr/sha
 re/texmf/fonts/type1/public/lm/lmtt12.pfb>
-Output written on ovsthus_mst.pdf (32 pages, 714929 bytes).
+Output written on ovsthus_mst.pdf (32 pages, 734673 bytes).
 PDF statistics:
- 493 PDF objects out of 1000 (max. 8388607)
- 414 compressed objects within 5 object streams
- 114 named destinations out of 1000 (max. 500000)
- 255 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 507 PDF objects out of 1000 (max. 8388607)
+ 426 compressed objects within 5 object streams
+ 113 named destinations out of 1000 (max. 500000)
+ 268 words of extra memory for PDF output out of 10000 (max. 10000000)
 

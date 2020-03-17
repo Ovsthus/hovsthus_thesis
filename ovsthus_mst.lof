@@ -8,10 +8,11 @@
 \contentsline {figure}{\numberline {2.6}{\ignorespaces A transfer with wait states, modified reprint from \cite {amba}. In this document the letters represent different masters\relax }}{12}{figure.caption.9}
 \addvspace {10\p@ }
 \contentsline {figure}{\numberline {3.1}{\ignorespaces Hardware toplevel with 3 masters and 3 slaves connected\relax }}{16}{figure.caption.13}
-\contentsline {figure}{\numberline {3.2}{\ignorespaces Master agent FSM\relax }}{18}{figure.caption.17}
-\contentsline {figure}{\numberline {3.3}{\ignorespaces Master agent FSM\relax }}{18}{figure.caption.19}
-\contentsline {figure}{\numberline {3.4}{\ignorespaces ESL toplevel with 2 masters and 3 slaves connected\relax }}{20}{figure.caption.20}
-\contentsline {figure}{\numberline {3.5}{\ignorespaces Abstract CSM\relax }}{21}{figure.caption.21}
-\contentsline {figure}{\numberline {3.6}{\ignorespaces Detailed data state CSM\relax }}{21}{figure.caption.21}
-\contentsline {figure}{\numberline {3.7}{\ignorespaces Illistration of port connection\relax }}{24}{figure.caption.23}
+\contentsline {figure}{\numberline {3.2}{\ignorespaces Master agent FSM\relax }}{17}{figure.caption.15}
+\contentsline {figure}{\numberline {3.3}{\ignorespaces Master agent FSM\relax }}{18}{figure.caption.16}
+\contentsline {figure}{\numberline {3.4}{\ignorespaces ESL toplevel with 2 masters and 3 slaves connected\relax }}{20}{figure.caption.17}
+\contentsline {figure}{\numberline {3.5}{\ignorespaces Abstract CSM\relax }}{21}{figure.caption.18}
+\contentsline {figure}{\numberline {3.6}{\ignorespaces Detailed data state CSM\relax }}{21}{figure.caption.18}
+\contentsline {figure}{\numberline {3.7}{\ignorespaces Illustration of port connection\relax }}{24}{figure.caption.20}
+\contentsline {figure}{\numberline {3.8}{\ignorespaces master agent FSM\relax }}{24}{figure.caption.22}
 \addvspace {10\p@ }
