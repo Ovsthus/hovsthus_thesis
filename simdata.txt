@@ -1,9 +1,53 @@
-ESL:
+Simdata garnacha .36
 
-1 masters 4 slaves with cport for 10000000 transfers: 273s 
-                                   1000000 transfers:  20s
+1000000 transfers
 
-1 master 4 slaves without cport for 1000000 transfers: 26s
+-1 master 1 slave
+ESL: 10s
+RTL: 309.5 seconds    (note that pipelining is not in effect)
 
+-2 masters 2 slaves
+ESL: 9s
+RTL: 206s
 
-1 master 4 slaves with shared ports for 1000000 transfers: 30s
+-3 masters 3 slaves 
+ESL: 8s 
+RTL: 99.5s
+
+-5 masters 5 slaves 
+ESL: 9s (random waits also 9s)
+RTL: 106.5s (master 4-5 starves, does this matter on the timing?)
+
+-10 masters 10 slaves
+ESL: 10s
+RTL: 132s
+
+-15 masters 15 slaves
+ESL: 9s
+RTL: 161s
+
+---------------------------------------------------------
+-1 master 1 slave
+ESL: 10s
+RTL: 309.5 seconds    (note that pipelining is not in effect)
+
+-3 masters 1 slave
+ESL: 9s
+RTL: 96s
+
+-6 masters 1 slave
+ESL: 9s
+RTL: 99s
+
+------------------------------------------------------
+-1 master 1 slave
+ESL: 10s
+RTL: 309.5 seconds    (note that pipelining is not in effect)
+
+-1 master 3 slaves
+ESL: 10s
+RTL: 305s (no pipelining)
+
+-1 master 6 slaves
+ESL: 9s
+RTL: 317s 
