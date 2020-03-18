@@ -120,8 +120,8 @@ The design choice to zero \textbf{HRDATA} and modify the default slave response 
 The remaining option is to emulate a single compound port using a combination of shared and blocking ports.
 
 \subsubsection{Combinatory port emulation}
-When examining the FSM in figure \ref{fig:rafsm} it is seen that the traversal of the master agent state machine is always blocked by an input signal. The \textit{Request-}, \textit{Address-} and \textit{Data\_phase} are blocked by the AHB matrix's response signals \textbf{HREADY} and \textbf{HGRANTx}. Although the value of \textbf{HGRANTx} is impossible to determine effectively in the next clock cycle, its functionality with respect to the state machine can still be properly represented using a blocking port. The handshake from the master agents side represent the request, whereas the handshake from the AHB matrix side represent \textbf{HGRANTx} and \textbf{HREADY}. Due to the pipeline nature of the bus, a request can occur at any main state of the bus as seen from figure \ref{fig:eslfsm}. This creates the requirement of a separate output representing \textbf{HREADY} alone, to allow for state machine traversal after bus has been granted. Only one port read can be represented in each clock cycle for blocking ports. Due to each master agent requiring their own port for each of the cases, it is necessary to contain these ports in a seperate module, and treat it as a new type of port interface.
-This port determines internally which master agent gets granted/unblocked with a simple fixed priority arbitration scheme. The final issue is having the port correctly represent updated requests. For this reason the port waits for a synchronization signal (handshake) from the AHB matrix. When this handshake is received the port peeks on all its request inputs and forwards this information to the AHB matrix through a \textit{Shared} interface, while simultaneously unblocking the highest priority requesting agent and every \textbf{HREADY} port that may be blocked. Special care has been taken to ensure that this happens in an atomic and synchronized manner.   
+When examining the FSM in figure \ref{fig:rafsm} it is seen that the traversal of the master agent state machine is always blocked by an input signal. The \textit{Request-}, \textit{Address-} and \textit{Data\_phase} are blocked by the AHB matrix's response signals \textbf{HREADY} and \textbf{HGRANTx}. Although the value of \textbf{HGRANTx} is impossible to determine effectively in the next clock cycle, its functionality with respect to the state machine can still be properly represented using a blocking port. The handshake from the master agents side represent the request, whereas the handshake from the AHB matrix side represent \textbf{HGRANTx} and \textbf{HREADY}. Due to the pipeline nature of the bus, a request can occur at any main state of the bus as seen from figure \ref{fig:OC}. This creates the requirement of a separate output representing \textbf{HREADY} alone, to allow for state machine traversal after bus has been granted. Only one port read can be represented in each clock cycle for blocking ports. Due to each master agent requiring their own port for each of the cases, it is necessary to contain these ports in a seperate module, and treat it as a new type of port interface.
+This port determines internally which master agent gets granted/unblocked with a simple fixed priority arbitration scheme. The final issue is having the port correctly represent updated requests. For this reason the port waits for a synchronization signal (handshake) from the AHB matrix. When this handshake is received the port peeks on all its request inputs and forwards this information to the AHB matrix through a \textit{Shared} interface, while simultaneously unblocking the highest priority requesting agent and every \textbf{HREADY} port waiting for a synchronization signal. Special care has been taken to ensure that this happens in an atomic and synchronized manner.   
 \begin{wrapfigure}{l}{5.5cm}
 \includegraphics[width=5.5cm]{figs/ESL/port_diagram.png}
 \caption{Illustration of port connection}\label{fig:cport}
@@ -138,7 +138,18 @@ The master agent is at the ESL in a quite simple manner using blocking ports to 
 \newline  
 
 \subsubsection{Bus matrix}
-The bus matrix is a slighly more complex implementation, as can be seen from figure \ref{fig:eslfsm}. All shared outputs are written, or determined in all of the states to enable the generated properties to satisfy the completeness criterion. The remaining signals to the interface are implicitly determined at all times by the blocking port. To aid in understanding section \ref{sub:refine} an overview of important signals is provided. 
+The bus matrix has three main states as seen from figure \ref{fig:OC}. There is only one single communication with the emulated port in each of the three states. 
+\begin{lstlisting}
+   update_requests->try_write(true, sync, "idle_state");
+   requests_in->get(reqs);
+\end{lstlisting}
+
+The non-blocking write 
+
+
+The bus matrix is a more complex implementation, as can be seen from figure \ref{fig:eslfsm}.
+
+ All shared outputs are written, or determined in all of the states to enable the generated properties to satisfy the completeness criterion. The remaining signals to the interface are implicitly determined at all times by the blocking port. To aid in understanding section \ref{sub:refine} an overview of important signals is provided. 
 
 \begin{table}[hbt] 
   \begin{tabular}{|p{3cm}|r|p{7cm}|} 
