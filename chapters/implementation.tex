@@ -134,7 +134,7 @@ The port in figure \ref{fig:cport} is illustrated using the actual port directio
 \includegraphics[width=5.5cm]{figs/ESL/mAgent_ESL.png}
 \caption{master agent FSM}\label{fig:eafsm}
 \end{wrapfigure}
-The master agent is at the ESL in a quite simple manner using blocking ports to determine important states. All states from figure \ref{fig:rafsm} are deemed important states. They are all needed to communicate with the individual states of the bus matrix, or their masters. Transitions between the states are dependent on the synchronization signals alone, and all remaining interface signals are passed through shared ports. The generated properties are refined with minimal effort and proven to be a sound abstraction of the master agent RTL.  \\
+The master agent is modeled at the ESL in a relatively simple manner using blocking ports to determine important states. All states from figure \ref{fig:rafsm} are deemed important states. They are all needed to communicate with the individual states of the bus matrix, or their masters. Transitions between the states are dependent on the synchronization signals alone, and all remaining interface signals are passed through shared ports. The generated properties are refined with minimal effort and proven to be a sound abstraction of the master agent RTL.  \\
 \newline  
 
 \subsubsection{Bus matrix}
@@ -144,36 +144,98 @@ The bus matrix has three main states as seen from figure \ref{fig:OC}. There is 
    requests_in->get(reqs);
 \end{lstlisting}
 
-The non-blocking write 
-
-
-The bus matrix is a more complex implementation, as can be seen from figure \ref{fig:eslfsm}.
-
- All shared outputs are written, or determined in all of the states to enable the generated properties to satisfy the completeness criterion. The remaining signals to the interface are implicitly determined at all times by the blocking port. To aid in understanding section \ref{sub:refine} an overview of important signals is provided. 
-
-\begin{table}[hbt] 
-  \begin{tabular}{|p{3cm}|r|p{7cm}|} 
- \label{tab:impsig}
-  \hline
-  \textbf{Signal} & \textbf{Type} & \textbf{Description} \\
-    \hline
-  \textit{update\_requests} & blocking\_out & Uses non blocking write to signal the emulated port to update requests. \\
-    \hline
-  \textit{requests\_in} & shared\_in & A compound of all pending requests provided by the emulated port \\
-    \hline
-  \textit{AS\_regs} & visible reg & The payload from the master but including \textbf{HTRANS[1:0]}. Stores the values of granted agent in its address phase. \\
-    \hline  
-\textit{DS\_regs} & Visible reg & The payload from the master, stored for any master in its data phase.  \\
-    \hline
-\textit{resp} & Visible reg & stores response from the slave. \\
-    \hline
-  \end{tabular}
-\caption{Important signals}
-\end{table}
-  
+The sequence allows the emulated port to fetch most recent request from the master agents and update the shared port while the bus matrix is waiting. 
+Even though requests are arbitrated within the port to ensure correct functionality, arbitration is again represented with an if then else cluster to represent this behavior in the properties. 
+If there are no requests this state will loop, which is preferable to using a blocking write. The wait property associated with the blocking write is impossible to prove due to the possible immediate change of \textbf{HGRANTx}. \par
+The payload of the highest priority request is stored in the compound \textit{AS\_regs}, and the bus proceeds to the address phase. (TODO: change bus state to phase, and master phase to state, more clear) 
+The compound \textit{AS\_regs} represent the signals broadcast to the bus by the granted master, and is represented in the properties as visible registers. \par
+In the address phase the values of \textit{AS\_regs} are stored in \textit{DS\_regs} and the operations in the previous phase are repeated, but without the possibility of a loop.
+As seen from Fig.~\ref{fig:OC} the transition to the data phase is unconditional, as all slaves are required to be ready. The data phase is split into a series of substates as seen in Fig.~\ref{eslfsm}.
+Since the master agent interface is represented using mostly shared ports, outputs must be written every clock cycle to successfully prove completeness. The properties generated for the shared outputs
+are only defined at the right hook. In this case it is not sufficient for properties spanning more than one clock cycle. \par
+The request sequence is again carried out, with the difference that it can transition to either of the three states. 
+ 
 
 \subsection{Refining properties}
 \label{sub:refine}
+(gotta mention master agent state somewhere)
+This section is an overview of the refinement of the properties, and the completeness proof. The interface to the master agents will be covered for both sides in parallel.
+The signals \textbf{HREADY}, \textbf{HGRANTx} and \textbf{HBUSREQx} are represented with multiple macros in the property suite, which require explanation. 
+\textit{update\_requests} represent all three signals functionally at the ESL, but the generated macros are not sufficient to prove completeness.
+The macros needed to fullfil the requirements are listed in Fig.~\ref{fig_reqmac}, where superflous signals are omitted. 
+
+\begin{figure}[hbt]
+	\centering
+	\begin{minipage}[t]{0.49\textwidth}
+		\centering
+                 \begin{enumerate}
+                   \item \textit{reqs\_sig\_m(x)\_request}
+                   \item \textit{update\_requests\_notify}
+                   \item \textit{update\_requests\_sync}
+                   \item \textit{bus\_to\_mAgent(x)\_sig\_hgrant}
+                   \item \textit{m(x)\_grant}
+                 \end{enumerate}
+              
+	\end{minipage}
+	\begin{minipage}[t]{0.49\textwidth}
+		\centering
+		 \begin{enumerate}
+                   \item \textit{mAgent\_request\_notify}
+                   \item \textit{mAgent\_request\_sync}
+                   \item \textit{bus\_ready\_sync}
+                   \item \textit{bus\_to\_mAgent\_sig\_hgrant}
+                 \end{enumerate}
+              
+	\end{minipage}
+\caption{List of macros for request handling, with bus matrix on the left and master agent on the right}
+\label{fig:reqmac}
+\end{figure}
+
+\newpage
+Brief descriptions of the signals are given in table \ref{tab:reqmac}.
+
+\begin{table}[hbt] 
+  \label{tab:reqmac}
+  \begin{tabular}{r p{10cm}} 
+  \hline
+  Matrix & Description \\
+    \hline
+  \textit{1.} & represents \textbf{HBUSREQx}, macro is determined as input in the completeness description \\
+    \hline
+  \textit{2.} & represents \textbf{HREADY} "or" (\textbf{HREADY} "and" \textbf{HGRANTx}). Macro is determined as output in the completeness description. This is sufficient to determine \textbf{HREADY}, but not \textbf{HGRANTx} \\
+    \hline
+  \textit{3.} & represents the "or" of all \textbf{HBUSREQx}, not part of completeness description, but added to table to provide consistency with 1. in agent. \\ 
+    \hline
+  \textit{4.} & represents \textbf{HGRANTx}, this signal is redefined as boolean and defined as output in the completeness description. \\
+    \hline
+  \textit{5.} & A function that calculates the current value of \textbf{HGRANTx} based on determined inputs and outputs \\
+    \hline
+  Agent & Description \\
+    \hline
+  \textit{1.} & represent \textbf{HBUSREQx}, defined as output in completeness description. \\
+    \hline
+  \textit{2.} & represents \textbf{HGRANT} "and" \textbf{HREADY}. Is not part of completeness description, but added to table to provide consistency with 2. in bus matrix. \\
+    \hline
+  \textit{3.} & represents \textbf{HREADY}, defined as input in completeness description \\
+    \hline
+  \textit{4.} & represent \textbf{HGRANTx}, redefined as boolean. Defined as input in completeness description. \\
+    \hline  \end{tabular}
+\caption{Description of macros for request handling}
+\end{table}
+
+The signals added to provide consistency are not strictly needed to pass any of hte completeness tests. It is rather a security measure to comply with the guidelines for working with clusters mentioned in 
+Sec.~\ref{sub:clust}. Although the interface signals are not represented indentically on both sides, as long as the behavior is guaranteed within the emulated port it will not leave a gap in verification.
+
+\subsubsection{Visible registers}
+(only matrix)
+The macros representing visible registers in the property suite are all variables in the ESL description which store values between the states. In this implementation none of the visible registers directly represent actual registers in the design. They represent input/outputs from/to masters and slaves, based on selection criteria. The selection criteria are generally the states of the master agents, or the conceptual state of the bus. 
+\begin{itemize}
+ \item \textit{AS\_regs}: Represents the subset of master agent outputs included in the payload, including \textbf{HTRANS} for the agent in its address state. If none it has default values.
+ \item \textit{DS\_regs}: Either represents the subset of master agent outputs included in the payload for the agent in its data state. Or represents the output of the slave that has its out notify set. The address offset is effectively accounted for this way. If none apply it has default values
+ \item \textit{resp}: Represents the response payload of the slave that has both its in notify and sync set the last 2 cycles. Otherwise it has default values.
+ \item \textit{phase/nextphase}: Represents the main CSM of the bus matrix. Selected based on which state macro is true.
+\end{itemize} 
+
 
 
 
