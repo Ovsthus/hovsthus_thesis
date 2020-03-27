@@ -3,7 +3,8 @@ The semiconductor industry has always been striving to increase computer perform
 Some recent research proposes a theoretical framework to bridge the semantic gap between the two abstraction layers \cite{2014-UrdahlStoffel.etal}. This research is further developed into a new methodology of hardware design. With this new methodology; \textit{Property Driven Development} (PDD) a system can be fully verified at the ESL. A sound relationship between the ESL and RTL is ensured by generating interval properties which describe the input/output behavior of the ESL description. The RTL is then designed according to these interval properties \cite{pddref}. This methodology is the foundation that this thesis is based on, and it will be elaborated further in chapter \ref{ch:theory}. Due to reasons that will be explained in chapter \ref{ch:theory} section \ref{sec:ppa} one need to follow a certain set of rules for PDD when describing the system at the ESL. \par 
 There are two goals of this thesis ; \\
 \begin{enumerate}
- \item Automatically generate an implementation of the bus architecture AMBA-AHB at the ESL and RTL, for a user defined number of masters and slaves.
+ \item Automatically generate an implementation of the bus architecture AMBA-AHB at the ESL and RTL, for a user defined number of masters and slaves. The goal
+is to represent the system at the ESL with a high level of abstraction.
  \item Prove that the generated ESL implementation is a sound abstraction of the RTL counterpart.
 \end{enumerate}
 

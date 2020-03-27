@@ -130,10 +130,15 @@ This section is a shorthand guide to the AMBA AHB and its specification to aid i
 
 \begin{tabular}{p{3cm} p{10cm}}
 Bus master(s) & Can when granted, initiate a transfer, a read or write in the form of a burst or as a single transfer. Multiple master can not transfer concurrently. \\
+\hline
 Bus slave(s) & Responds to the granted master by reading its control signals in one phase, and responding in the next. \\
+\hline
 Arbiter & Chooses which master gets a bus grant by using a chosen arbitration scheme. Relevant schemes are fixed priority and round robin. The arbiter controls the address/control and write data mux \\
+\hline
 Decoder & Decodes the address, selects appropriate slave and controls the response data mux. \\
+\hline
 Default slave & Response given when no valid slave is selected, it is usually integrated in the decoder.\\
+\hline
 Default Master & The arbiter grants a selected default master the bus when idle. \\
 \end{tabular}
 
@@ -146,9 +151,8 @@ Default Master & The arbiter grants a selected default master the bus when idle.
     \label{fig:interc}
 \end{figure}
 
-\newpage
 
-\begin{figure}[hbt]
+\begin{figure}[ht!]
  \centering
  \begin{subfigure}[b]{0.4\linewidth}
  \includegraphics[width=\linewidth]{figs/AHB/master_signals.png}
@@ -163,15 +167,20 @@ Default Master & The arbiter grants a selected default master the bus when idle.
 \end{figure}
 
 
-As figure \ref{fig:interc} illustrates, the selected address/control and data signals are broadcast to all receivers simultaneously. On the slave side every signal is ignored unless the \textbf{HSELx} signal is set by the decoder. Slave \textbf{x} then reacts to the \textbf{HTRANS[1:0]} and \textbf{HREADY} control signal. Since the master is the initiator it will only react to appropriate signals when expected. \\
+As figure \ref{fig:interc} illustrates, the selected address/control and data signals are broadcast to all receivers simultaneously. On the slave side every signal is ignored unless the \textbf{HSELx} signal is set by the decoder. Slave \textbf{x} then reacts to the \textbf{HTRANS[1:0]} and \textbf{HREADY} control signal. \\
 
-\subsection{Transfers}
+\subsection{Overview of transfer}
+Before a master can start a transaction it must request access to the bus. The arbiter uses a chosen arbitration method to decide which master is granted access
+to the bus. A transaction consists of two phases: \\
+\begin{itemize}
+ \item Address phase: The master provides address and control signals. The slave must be ready to sample the signals. 
+ \item Data phase: Master or slave provides valid data. The slave is able to extend this phase if it is needed. 
+\end{itemize}
 
-\subsubsection{Overview of transfer}
-
-\TLSAY{The text below does not provide an overview ... it's very detailed. I would start with a quick overiew of read/write ... I guess you didn't end up working on burst at all? and the show the waveform and explain the hready, hreq and so on with the waveform} 
-A master requests the bus by asserting its \textbf{HBUSREQx} signal. The master waits until \textbf{HREADY} and its \textbf{HGRANTx} is set and provides appropriate address and control signals in the next cycle. The transfer is now in the address phase, all set values must be kept valid until \textbf{HREADY} is set. The transfer is now in the data phase. If the transfer is a write, the master must provide valid data and keep it valid until \textbf{HREADY} is set. Otherwise it is a read, and the slave does not need to provide valid data until it sets \textbf{HREADY}. Master samples the data when \textbf{HREADY} is set.
-\newpage
+In the address phase the master provides address and control signals. The control signals tell the slave if it is a read or write, data width and whether the
+transfer forms part of a burst. \par
+In the data phase data is transferred to or from the slave. If it is a single transfer only one unit of data is transferred. If the slave needs more than
+one cycle to process the data it can extend this phase by driving \textbf{HREADY} low. 
 
 \begin{figure}[hbt]
     \begin{center}
@@ -181,7 +190,8 @@ A master requests the bus by asserting its \textbf{HBUSREQx} signal. The master 
     \label{fig:transfer}
 \end{figure}
 
-In figure \ref{fig:transfer} master A initiated a transfer, and the slave extends the data phase to give itself time to handle the request. When the slave is finished it responds using \textbf{HREADYOUT}, \textbf{HRESP} and if it is a read request, \textbf{HRDATA}, see \ref{subsubsec:slvresp}. As seen from the figure, extending the data phase for A has a side effect of extending the address phase for B. B is the address bus owner, but any selected slave knows not to react to its control signals. \textbf{HREADYOUT} is routed back to the slaves input as \textbf{HREADY} through the address mux, and must be set for the slave to sample address and control. For this reason only \textbf{HREADY} is referred to for the remainder of this document. 
+Figure \ref{fig:transfer} is an example of a transfer that is extended. Observe that in the case of a write transaction, the master must maintain valid \textbf{HWDATA} throughout the entire data phase. In the case of a read however, the slave must only provide data in the same cycle as it asserts \textbf{HREADY}. Extending the data phase of A has the side effect of extending the address phase of B.  
+
 
 \newpage
 \subsection{Control signals}
@@ -196,9 +206,9 @@ The following signals determine which actions the slaves perfom:
     \hline
   01 & \textit{busy} & Used by master to insert idle cycles in the middle of a burst sequence. \\
     \hline
-  10 & \textit{nonseq} & Indicates the start of a transfer, address and control is unrelated to the previous transfer. Single transfers are treated as burst of one, the transfer type is therefore nonsequential\\
+  10 & \textit{nonseq} & Indicates the start of a transfer, address and control signals are unrelated to the previous transfer. Single transfers are treated as burst of one, the transfer type is therefore nonsequential\\
     \hline
-  11 & \textit{seq} & The remaining transfers in a burst are sequential.\\
+  11 & \textit{seq} & Address and control signals are related to the previous transfer.\\
 \hline
   \end{tabular}
 \caption{Transfer type}
