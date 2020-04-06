@@ -1,6 +1,6 @@
 \label{ch:impl}
 This chapter presents the proposed implementation of the AHB system generator. Sec.~\ref{sec:hardover} provides an overview of the hardware described at the RTL. Sec.~\ref{sec:syslev} discusses how the ESL description is adapted to represent the hardware architecture. The challenges in creating a sound abstraction
-of the hardware are elaborated. This is followed by an overview of the simulation models on both levels in Sec.~\ref{sec:sim}. The chapter is ended with Sec.~\ref{sec:results} where results of property checking and simulation times are presented.
+of the hardware are elaborated. This is followed by an overview of the simulation models on both levels in Sec.~\ref{sec:sim}. A description of the hardware generator is given in Sec.~\ref{sec:generator} The chapter is ended with Sec.~\ref{sec:results} where results of property checking and simulation times are presented.
 
 \newpage
 \section{Hardware overview}
@@ -9,21 +9,21 @@ of the hardware are elaborated. This is followed by an overview of the simulatio
     \begin{center}
         \includegraphics[width=0.8\textwidth]{figs/hw/Hw_toplevel.png}
     \end{center}
-    \caption{Hardware top-level with 3 masters and 3 slaves connected}
+    \caption{Hardware top-level with 3 masters and 4 slaves connected}
     \label{fig:hw_toplev}
 \end{figure}
 
 For the purpose of this work, it makes little sense trying to implement the AMBA-AHB protocol from scratch starting at the ESL. It would take too much time to design the system and verify that it complies with the protocol. Instead, a trusted existing open source architecture is used. It is trusted in the sense that
-it is often referenced when "the how" of protocol implementation is inquired. Furthermore, it has been available for scrutiny online for the last 15 years.  
+it is often referenced online when "the how" of protocol implementation is inquired. Furthermore, it has been available for scrutiny online for the last 15 years.  
 
 
 \subsection{Existing hardware}
 \label{sub:exist}
-The existing hardware is taken from the \textit{ahb\_system\_generator} found at www.opencores.com \cite{ahbsys}. This architecture is already structured for the
-means of generation and is implemented in VHDL, although is doesn't support wide data bus configurations it is the ideal candidate for this work. The master and slave agents was not taken from this source, they were rather redesigned to match SystemC-PPA compliant modules. This architecture supports fixed-priority, round robin and random priority arbitration. There are also modified versions of these arbitrations, where a grant is maintained as long as \textbf{HBUSREQx} is asserted. The chosen arbitration for this work is the modified fixed-priority. The possibility of starvation is a drawback, but it is far less complicated to model at the ESL than for example round robin. Due to limited time, burst, split and retry transfers are not implemented in the agents. The the modified extension to fixed-priority is selected to simplify an implementation of burst transfers. A study of this is presented in chapter \ref{ch:summary}. This hardware is represented in Fig.~\ref{fig:hardover} as the arbiter, decoder and wires connecting the agents. For simplicity it will collectively be referred to as the bus matrix. \par 
+The existing hardware is taken from the \textit{ahb\_system\_generator} found at \\
+ www.opencores.com \cite{ahbsys}. This architecture is already structured for the means of generation and is implemented in VHDL, although is doesn't support wide data bus configurations it is the ideal candidate for this work. The master and slave agents was not taken from this source, they were rather redesigned to match SystemC-PPA compliant modules. This architecture supports fixed-priority, round robin and random priority arbitration. There are also modified versions of these arbitrations, where a grant is kept as long as \textbf{HBUSREQx} is asserted. The chosen arbitration for this work is the modified fixed-priority. The possibility of starvation is a drawback, but it is far less complicated to model at the ESL than for example round robin. Due to limited time, burst, split and retry transfers are not implemented in the agents. The the modified extension to fixed-priority is selected to simplify an implementation of burst transfers. A study of this is presented in Sec.~\ref{sub:burstdemo}. The hardware is represented in Fig.~\ref{fig:hw_toplev} as the arbiter, decoder and wires connecting the agents. For simplicity it will collectively be referred to as the bus matrix. \par 
 For reasons discussed in Sec.~\ref{sec:syslev} a property set was manually described to discover a suitable abstraction of this hardware. In the process it was
 discovered that the default slave did not provide a zero cycle OKAY response when it was supposed to. It did however, provide the two cycle ERROR response as 
-required by the protocol. This error does not change any functionality of the design, and would never show up in simulation unless a master or agent was sensitive to this. Because it complicated the development of a property set, it was corrected. 
+required by the protocol. This did not change any functionality of the design, and would never show up in simulation unless a master or agent was sensitive to this. The correct zero cycle okay response was added to simplify the completeness proof. 
 
    
 \subsection{Master agent}
@@ -66,27 +66,22 @@ An overview of a transfer is provided with respect to the FSM.
  \item \textit{to\_master}: Agent waits for a synchronization signal from the master. The master should already be asserting its synchronization signal, but this is not a requirement.   
 \end{enumerate}
 
-The sequence of operations above does not seem to match the sequence in the protocol covered in Sec.~ref{sec:ahb} in the previous chapter. It is however, 
+The sequence of operations above does not seem to match the sequence in the protocol covered in Sec.~\ref{sec:ahb} in the previous chapter. It is however, 
 understood that address/control and data can have arbitrary values outside their respective phases, as long as the intended values are present in their 
-respective phases. It is therefore also not an issue that they have the intended values outside the respective phases as well. This is provided that \textbf{HTRANS} have the correct encoding at all times.  \WKSAY{Specify that reads and writes are equal if this design desicion remains}
- 
+respective phases. It is therefore also not an issue that they have the intended values outside the respective phases as well. This is provided that \textbf{HTRANS} have the correct encoding at all times. 
+\newpage 
 
 \subsection{Slave agent}
-\begin{wrapfigure}{l}{5.5cm}
+\begin{wrapfigure}[14]{l}{5.5cm}
 \includegraphics[width=5.5cm]{figs/hw/sAgent_FSM.png}
-\caption{Master agent FSM}\label{fig:rsfsm}
+\caption{Slave agent FSM}\label{fig:rsfsm}
 \end{wrapfigure}  
 
-The slave agent implements the slave side of the protocol. 
-
-\WKSAY{I think this FSM is misleading, since HREADY=1 is part of the data phase}
-As figure \ref{fig:rsfsm} shows the slave agent FSM is more complex than that of the master agent. To make the slave agent comply with the AHB protocol it needs to both obey the rules of the transfer phases and provide the proper response while communicating with its slave. A slave agent is always ready to receive a payload from its master, namely the AHB matrix. \WKSAY{the word phase should not be used for idle in slaves}
-Starting from the \textit{idle\_phase} the agent stays idle until it is both selected and the encoding of \textit{nonseq} is detected on its inputs. When true it samples address and control signals from the AHB matrix and proceeds to the \textit{data cycle} where it samples the data. After sampling the data, the payload is written to the slave out port named \textit{sAgent\_to\_slave}. At this point the agent waits for a handshake, which should normally occur instantly but that is not a requirement. After the handshake is received it proceeds to wait for the response data and status from the slave, as with the output there is not a strict requirement on the wait time but it is recommended to keep the wait states under 16 cycles in total. The slave agent deasserts \textbf{HREADY} throughout its entire conceptual data phase, and zeroes \textbf{HRDATA} one clock cycle after asserting \textbf{HREADY}. \\
-\newline
-\WKSAY{this is highly misleading, it may not be operated by another master, only one can be operated at a time, rather it signals to the bus that it is not ready yet.}
-The slave agent may at any given timepoint be operated by another master. This is why the slave deasserts its \textbf{HREADY} throughout its entire conceptual data phase. It is standard for a slave to introduce wait states. As with a DRAM module, there are delays associated with activating a row (insert data). As with DRAM this delay is minimized in sequential address transfers using bursts. In contrast to the diagram in figure \ref{fig:transfer}, the conceptual data phase of the slave agent does not include the assertion of \textbf{HREADY}. 
-\WKSAY{what is a misnomer? and dont use the word assertion this way.}
-This is a slight misnomer since the data phase does in fact include the assertion as seen from the properties. It is however not included in the FSM to not diffuse the differences between the states. The \textit{idle\_phase} and \textit{error cycle} only differentiate in the value of \textbf{HRESP}. Although the assertion of \textbf{HREADY} technically is a part of the data phase, it is however beneficial to highlight that these are separate states, as they are represented as such in the RTL description. The zeroing of \textbf{HRDATA} is a design choice to increase abstraction. \WKSAY{Why does this increase abstraction, this hangs a bit loose}
+The slave agent implements the slave side of the protocol. The transitions in the FSM of Fig.~\ref{fig:rsfsm} have been simplified to make the diagram more readable. When the slave agent is selected and the start of a transfer is detected it samples the address and control signals. An additional data cycle is
+required to sample the data in the case of a write transfer. The transfer payload is written out on the slave out port and the slave processes the request. The slave responds with status, and data in the case of a read. If the status is error the slave agent inserts an error cycle to provide the two cycle error response. \par
+The slave agent drives \textbf{HREADY} low in all states except idle. This extends the data phase of the transfer and gives the slave time to process the request. There are no formal restrictions on the amount of wait states that can be inserted, but a total of 16 should not be exceeded for more accurate performance analysis. \\
+In addition to the slave ports implementing a four phase handshake, two additional features are added to assist the system level description. The slave base address is subtracted before writing the address out to the slave. The slave only knows of its own address range starting from zero. The second feature is that the return data is zeroed after it has been sampled. The reason for this is related to the generated properties. \\
+The output \textbf{HRDATA} to each master is assigned a value in each property. This can either be an updated value or the previous value. In either case, it is the \textbf{HADDR} of the granted master that determine which slave has its \textbf{HRDATA} broadcast on the response data bus. Instead of always keeping track of \textbf{HADDR}, it is easier to zero this value, when it is not valid. Why \textbf{HRDATA} is not only valid if a notify is set becomes clear when discussing the master agent interface in Sec.~\ref{sec:syslev}.   
 \newpage
 
 \section{System level representation}
@@ -102,226 +97,184 @@ This is a slight misnomer since the data phase does in fact include the assertio
 When representing the AHB system at the ESL, abstraction is a priority. Ideally there would be a single SystemC-PPA describing the entire system. It is on 
 the other hand not possible to represent this multi-master design without separating the master agents into their own SystemC-PPA. The reason for this is 
 parallelism, and a single threads lack of capability to represent it. Regardless of which conceptual state the system is in, any idle master can receive 
-a message and proceed to request. This operation requires the modification of the output \textit{mAgent\_to\_master(x)\_notify} in addition to knowledge of this
-request at the next conceptual system state. This is not practical to represent at the ESL, if it is even possible. Considering that the ESL needs to represent an existing RTL description, it is beneficial to manually write the properties bottom-up to get an idea of how the system level description must be formed.
+a message and proceed to request. This operation requires the output \textit{master\_to\_mAgent(x)\_notify} to be de-asserted. In addition, knowledge of this request and the message must be stored for use in a later conceptual state. This is not practical to represent at the in a single SystemC-PPA, if it is even possible. \\
+Considering that the ESL needs to represent a relatively complex existing RTL description, it is necessary to manually write the properties bottom-up to get an idea of how the system level description of the bus matrix must be formed.
 
 \subsection{Manual property set}
-During the development of the initial property it became clear that to determine the state of the bus, knowledge of past behaviour is required. It is not possible to determine only by observing the internal registers of the design. It is easy to determine which master owns the address and
-data bus. However, this provides little information when the operating master is the default master. Even when observing the encoding on \textbf{HTRANS}, it is impossible to determine if the default master is active or idle in the data phase. One alternative is to look at past values of \textbf{HTRANS} to determine if the default master recently was in the address phase. Another much simpler alternative is to exploit that master agents are verified in separate clusters. The
-state of the master agents are determined as outputs to their clusters and as inputs to the main cluster. The state of the bus is now possible to determine at any time by observing the states of the master agents. \par
-The next steps in developing a complete property set include discovering visible registers and determining outputs to the design. Most of the important signals
-in this design are updated on a clock edge, which is straightforward to represent at the ESL. One of the signals of the master interface, \textbf{HGRANTx} is 
-not updated on a clock edge. This is problematic because it is not feasible to determine a fixed value for this signal in the next time point. \textbf{HGRANTx} 
-must be updated with the output of a function. For the same reason, the signals on the address bus can not be represented directly. The visible registers 
-representing the address bus are rather the inputs from the master agent in the state \textit{Address}, and if none apply a default value is selected. 
+During the development of the initial property set it became clear that to determine the state of the bus, knowledge of past behaviour is required. It is not possible to determine every state of the bus by observing internal registers of the design alone. There are registers storing which master owns the address and data bus, but this provides no information on the state of the bus when the owner is the default master. A solution is to look at past values of the transfer  control signals, but knowing how far back to look would require a fixed amount of wait states. Another much simpler alternative is to exploit that master agents are verified in separate clusters. The state of the master agents are determined as outputs to their clusters and as inputs to the bus matrix cluster. The state of the bus is now possible to determine at any time by observing the states of the master agents. \par
+For all the completeness checks introduced in Sec.~\ref{sub:cipc} to hold, certain attributes must be captured in the properties. 
+\begin{enumerate}
+ \item The handling of requests must be captured, which happens at any time \textbf{HREADY} is driven high. In this implementation this is when the system is idle, in the address phase of a transfer and at the end of the data phase of a transfer.
+ \item The transfer of a message from the master agent interface to the slave interface must be captured by representing it in visible registers. The address and data bus are not ideal candidates for physical registers to map these visible registers to. They are outputs of multiplexers, which are not updated on a clock edge. This is problematic to represent using SystemC-PPA. It is always true that when there is a request at time $t$, the message of the granted master from time $t$ is visible on the bus at time $t+1$. However, when one master loses its grant it is the default masters message that is visible on the bus. This could be either the message from $t$ or a message from $t+1$.  
+ \item The signals which are outputs to the master agent interface must be determined for all masters. It is not strictly necessary to determine response data unless a slave is responding and \textbf{HREADY} is set. The transfer status is similar, except it should be determined in both cycles of a two cycle error response. \textbf{HREADY} must always be determined, and when it is high so does \textbf{HGRANTx}. Like the address and data bus, \textbf{HGRANTx} is not updated on a clock edge. This is a larger issue in this case. It is not possible to determine this signal at any other than the current timepoint. The value must either be determined at time $t$, which is not possible at the ESL. Or it has to be determined as the output of a function. 
+\end{enumerate} 
+
+A property set which covered all inputs and outputs was designed, and all completeness checks held.  
 
 \subsection{Forming the ESL}
- 
-
-
-
-
-\WKSAY{Describe in detail the problem with multi-master designs, then describe in detail key things that must be represented in the ESL, like hready and hgrant in terms of the phases. They must be determined}
-Describing the AHB system with SystemC-PPA in a single cluster is no longer feasible when more than one master is connected to the bus matrix. The master agents must be contained within their own clusters, or PPAs so that it does not need to be accounted for every possible combination. Since only one slave may be operated at a time, including them in the bus matrix PPA reduces the overhead. The interface between the master agent and the bus matrix have signals with mostly identical values for all masters, the exception is \textbf{HGRANTx}. This signal is purely combinational in the implementation, meaning that it changes its value within the same clock cycle as its initiator. Using any combination of existing ports there was not found any manner to represent this interface for multiple masters. The decision was made to create the properties bottom-up, to determine if the interface could be represented using existing ports and if not, where the gap is. Gap free verification was used for this purpose, with the style of generated properties in mind. 
-
-\subsection{Bottom-up abstraction}
-\WKSAY{bottom up properties}
-The first challenge of carrying out the GFV process is determining the CSM of the AHB. It has to be represented in such a way that it is feasible to describe at the ESL. Looking at other formal verification efforts made on the AHB \cite{ahbformal}, it can be seen that the real FSM of an AHB is incredibly complex. 
-\WKSAY{it is incredibly complex because of burst} Furthermore, it is described how the state of the bus is dependent not just on state and inputs but on previous states as well. It is necessary to know the state of the bus, namely if there is a transfer being carried out or not. It is not as simple as paying attention to bus ownership since there is no way of knowing if there is a transfer in progress when the default master owns the data bus, without looking at past values on \textbf{HTRANS[1:0]} \WKSAY{long and useless sentence, this whole thing should be rewritten}. One would furthermore need to constrain the design to establish how far into the past to look. One could go with the suggested maximum delay of slaves for 16 clock cycles. A much simpler solution is to define the master agents states as outputs to their clusters, and define this as inputs to the main cluster. By only concerning with which masters are requesting and where the data goes, the CSM can be made quite simple. If one was concerned with which master owned the address and which master owned the data bus at all times it would lead to state explosion, making an ESL description unfeasible even for a low number of masters.     
-
-\begin{figure}[ht!]
-	\centering
-	\begin{minipage}[t]{0.49\textwidth}
-		\centering
-		\includegraphics[scale=0.5]{figs/ESL/Bus_fsm_new.png}
-		\captionof{figure}{Abstract CSM}
-		\label{fig:OC}
-	\end{minipage}
-	\begin{minipage}[t]{0.49\textwidth}
-		\centering
-		\includegraphics[scale=0.5]{figs/ESL/Data_state.png}
-		\captionof{figure}{Detailed data state CSM}
-		\label{fig:eslfsm}
-	\end{minipage}
-\end{figure}
-
-
-By using a fixed priority arbitration scheme it is simple to determine which master is granted the bus. 
-\WKSAY{This is nonsense, it needs to be restructured, be more descriptive, separate ESL states from property states}
-By dividing the transfer into three main states with the data state divided into five further, there is no need to impose any constraints on wait states. The bus is ready (\textbf{HREADY} is set) at the end of each state and any request is ignored unless the bus is ready. The states can be defined as follows:
+How to represent the interface between the master agents and the bus matrix at the ESL was put under much thought and required experimentation. Not only must address, control and data signals reach their target, but the generated properties must hold on the design and prove completeness. A pure interface using existing SystemC-PPA ports was explored: 
 \begin{itemize}
-\item Idle state: No transfer in progress.
-\item Address state: One master is in the address phase of the transfer, no masters are in the data phase. There is no trigger for the next state as the bus/slaves will always be ready here. 
-\item Data state: One master is in the data phase of the transfer. This state is broken down into five substates per slave, with default slave as exception.  
+  \item \textit{Shared port}: This port enables a straight forward implementation of the interface, all signals are represented in their pure form in both directions. Implementing the correct control flow between the master agents and the bus matrix proved to be problematic. Regardless, with this interface alone
+\textbf{HGRANTx} would need to be represented using actual values which as discussed is problematic.  
+ \item \textit{Master/slave port}: Because of the rules the slave side of this interface imposes introduced in Sec.~\ref{sub:ports}, this would just be a more tedious implementation of the shared port. The master agent does not communicate directly with the slave. If the bus matrix was a slave it would need to write every port in order, in every cycle. This is not practical when abstraction is the goal. 
+ \item \textit{Blocking port}: This port is ideal for modeling signals which control the transitions between states. Particularly the signals \textbf{HBUSREQx}, 
+\textbf{HREADY} and \textbf{HGRANTx}. The master agent can signal a request with the event notify of the port, and will wait for the synchronization from the other end. This synchronization signal represents grant/ready. A second port can be used similarily to represent ready in the two phases of the transfer. The generated properties are easy to refine on the master agent. The same does not apply for the bus matrix, because each port imply an important state. In terms of properties it is only allowed to be in one of these states at a time. In reality requests for one master is handled in the same cycle as \textbf{HREADY} advances the state one or two others.  
 \end{itemize}
 
-
-\WKSAY{This does not describe the bottom up properties, it describes the actual properties. you need to separate that}
-It is worth noting that in the idle and address state the bus/slaves are always ready. The payload is transferred between the states using visible register which are named \textit{AS\_regs} for the address state and \textit{DS\_regs} for the data state. The Data state is divided into several important states to describe the transaction between the slave and its agent while simultaneously describing all necessary outputs. The default slave has only two states and they are self explanatory because of the two cycle error response. The remaining slave agents are explained by the following:
-\begin{itemize}
- \item First state: There is one clock cycle delay required to allow the slave agent time to sample the possible data provided in the data phase.
- \item Second state: Slave agent writes payload to slave using blocking write. 
- \item Third state: Slave agent reads back from slave using blocking read.
- \item Fourth state: Slave writes payload back to bus. This requires two cycles due to the possibility of error, error cycle was removed from master agent due to inconsistencies in simulation. For this reason information on error is only contained within the visible registers handling response.   
- \item Fifth state: The bus is ready, payload is sampled, requests are handled and next state is determined based on the value of \textbf{HTRANS[1:0]}, which has been added to \textit{AS\_regs} alongside the payload. 
-\end{itemize}
-
-It is easy to see that the differentiation between read and write within the AHB matrix would lead to the double amount of data states \WKSAY{consider the trade-off, is it worth it?}, with the gain being one clock cycle saved in the case of a read \WKSAY{confusing and also probably wrong}. The entire design is represented by this CSM using only properties with length $t=1$ \WKSAY{t is the arbitrary timepoint, t=everything, use t\_end or something}so determining the output is straightforward with the exception of \textbf{HGRANTx}. As this is an output that is not stored in a register its value updates in the same clock cycle as its \WKSAY{is instrigator the word?} instigator. This is not a problem to model in the properties themselves, but this representation does not allow for any sound abstraction between the RTL and ESL \WKSAY{rather say it is not possible to represent by assigning value to a variable}. Determining the value of \textbf{HGRANT} in the next clock cycle is not feasible in this implementation. One would have to account for every \textbf{HBUSREQx} as an assumption at $t+1$ in every property. An alternative could be to enable this output through a register but this would lead to unpredictable behavior. This output is simply determined as the output of a function \textit{mx\_grant} and is at the ESL represented using an enum. \\
-\newline
-The design choice to zero \textbf{HRDATA} and modify the default slave response entails that \textbf{HRDATA} and \textbf{HRESP} will be zero unless it is in the fourth or fifth conceptual data state \WKSAY{this sentence is garbage}. After adding all determination requirements and proving completeness the properties show that the interface between the master agents and AHB matrix cannot be represented using a single existing SystemC-PPA port. Referring back to section \ref{subsec:ports} there is a choice between three ports. For clarity the implications of using each port is commented.
-\begin{itemize}
- \item \textit{Shared}: Explicit synchronization is needed to ensure that the value of \textbf{HREADY} and \textbf{HGRANTx} is neither overwritten nor obsolete. A solution was experimented with to highlight the increased abstraction. It was not successful without introducing illegal statements with respect to SystemC-PPA, even when disregarding the combinational response of \textbf{HGRANTx} \WKSAY{rather refer to abstraction, and grant}.   
- \item \textit{MasterSlave}: With MasterSlave some implicit synchronization is enabled. However, in this system one would be left with one of two choices. The bus matrix is the slave, or the master agents are the slaves. In either case the values of \textbf{HGRANTX} and \textbf{HREADY} would need to be representing correct values in every cycle. One side must always be ready for communication, so neither alternative is worth considering \WKSAY{rather refer to abstraction, and grant}.  
- \item \textit{Blocking}: The blocking port can be used to represent all signals functionally, but with blocking ports alone there are some issues. On the master agent side \textbf{HBUSREQx}, \textbf{HGRANTx} and \textbf{HREADY} can be represented both functionally and in the properties by the notify and wait used for synchronization. On the bus matrix side the functionality could be represented, but not the properties due to the states implied by each port. They all require their own state, and in turn a separate clock cycle to assert and deassert these signals.
-\end{itemize}
-
-The remaining option is to emulate a single compound port using a combination of shared and blocking ports.
-
-\subsubsection{Combinatory port emulation}
-When examining the FSM in figure \ref{fig:rafsm} it is seen that the traversal of the master agent state machine is always blocked by an input signal. The \textit{Request-}, \textit{Address-} and \textit{Data\_phase} are blocked by the AHB matrix's response signals \textbf{HREADY} and \textbf{HGRANTx}. Although the value of \textbf{HGRANTx} is impossible to determine effectively in the next clock cycle, its functionality with respect to the state machine can still be properly represented using a blocking port. The handshake from the master agents side represent the request, whereas the handshake from the AHB matrix side represent \textbf{HGRANTx} and \textbf{HREADY}. 
-\WKSAY{This sentence is not too clear, requests need to handled in each phase}
-Due to the pipeline nature of the bus, a request can occur at any main state of the bus as seen from figure \ref{fig:OC}. This creates the requirement of a separate output representing \textbf{HREADY} alone, to allow for state machine traversal after bus has been granted. Only one port read can be represented in each clock cycle for blocking ports. Due to each master agent requiring their own port for each of the cases, it is necessary to contain these ports in a separate module, and treat it as a new type of port interface.
-This port determines internally which master agent gets granted/unblocked with a simple fixed priority arbitration scheme. The final issue is having the port correctly represent updated requests. For this reason the port waits for a synchronization signal (handshake) from the AHB matrix. When this handshake is received the port peeks on all its request inputs and forwards this information to the AHB matrix through a \textit{Shared} interface, while simultaneously unblocking the highest priority requesting agent and every \textbf{HREADY} port waiting for a synchronization signal. Special care has been taken to ensure that this happens in an atomic and synchronized manner.   
-\begin{wrapfigure}{l}{5.5cm}
-\includegraphics[width=5.5cm]{figs/ESL/port_diagram.png}
-\caption{Illustration of port connection}\label{fig:cport}
-\end{wrapfigure}
-
-The port in figure \ref{fig:cport} is illustrated using the actual port directions in the ESL description, rather than the direction they symbolize. The inputs representing \textbf{HREADY} must be atomically unblocked which only happens when there is a pending handshake. To check for this the \textit{peek} function must be called, which is only available for reader ports. On the AHB matrix side the synchronization call to update the requests must always hand over control to the port by use of a wait function, which is only unconditionally called by use of a write port. When control is handed back to the AHB matrix the updated requests can be fetched from a shared port. 
-\WKSAY{Consider if the port can include the payloads back and forth, although this is harder for burst due to the shared ports}
+A solution to this is proposed by combining all signals into a single port. This port needs to represent both requests, grant/ready, and simply ready.
+This port type has been emulated using existing SystemC-PPA ports. On the master side there are two blocking out ports \textit{mAgent\_request} and \textit{bus\_ready}. On the bus matrix side there is one blocking out port \textit{update\_requests} and a shared in port \textit{requests\_in}. The emulated
+port resides in its own module, but is not intended to be counted as its own SystemC-PPA. Rather it is treated in this implementation as if it was a regular
+port. \par
+The port waits for a synchronization signal from \textit{update\_requests}. When it is received it peeks on all master agents request inputs and writes out a compound with this information to the \textit{requests\_in} port. The port decides internally which master has the highest priority, and performs a non-blocking read from its request port. This is followed by the port performing a non-blocking read of any \textit{bus\_ready} port which has an agent waiting. 
+By only performing a non blocking read when an agent is waiting ensures that the wait function is not called before the port is again blocked at \textit{update\_requests}. This way accurate simulation is accomplished together with a useable property set. \par
 
 \subsubsection{Master agent}
 \begin{wrapfigure}{l}{5.5cm}
 \includegraphics[width=5.5cm]{figs/ESL/mAgent_ESL.png}
 \caption{master agent FSM}\label{fig:eafsm}
 \end{wrapfigure}
-The master agent is modeled at the ESL in a relatively simple manner using blocking ports to determine important states. All states from figure \ref{fig:rafsm} are deemed important states. They are all needed to communicate with the individual states of the bus matrix, or their masters. Transitions between the states are dependent on the synchronization signals alone, and all remaining interface signals are passed through shared ports. The generated properties are refined with minimal effort and proven to be a sound abstraction of the master agent RTL.  \\
-\newline  
+
+The master agent reads a payload from its master from a blocking\_in port. When received,  the payload is added together with other control signals to a compound that represents the ahb master out interface. This compound is written to the bus on a shared\_out port. A shared port is used for two reasons: The interface output signals must be determined in the properties throughout the entire transfer. This is not accomplished with a blocking port. The control signal \textbf{HTRANS} must also be updated during the transfer. The bus request is represented separately by a blocking\_out port, as described earlier. The agent proceeds through the FSM as shown in figure \ref{fig:eafsm}. When bus is ready in the data state it reads the status and data from a shared\_in port and writes it out to its master through a blocking port. \WKSAY{The payload is written to the matrix as the state progresses to the request state because the matrix requires the payload on the address bus at $t+1$ to be fetched from the agent at time $t$. This is a misrepresentation of the protocol and there is no way around it. But it may be weird to write about this here rather than in a summary or appendix} 
 
 \subsubsection{Bus matrix}
-The bus matrix has three main states as seen from figure \ref{fig:OC}. There is only one single communication with the emulated port in each of the three states. 
+\begin{wrapfigure}[17]{l}{5.5cm}
+\includegraphics[width=5.5cm]{figs/ESL/Bus_fsm_new.png}
+\caption{Bus matrix FSM}\label{fig:busfsm}
+\end{wrapfigure}
+
+The bus matrix is represented at the ESL with three explicit states. These three states represent the transfer phases only when the transitions $Address\rightarrow Data$ are followed. This is not always the case so it is useful to distinguish the difference between the phases of the transfer and the states of the bus. If the bus is in the state $Address$, there is only one transfer in question and it is in the address phase. If the bus is in the state $Data$, there is one master with its transfer in the data phase, but the can also be a master with its transfer in its address phase. For this reason the word state can not be used interchangeably with phases, as they can within the master agents. \\
+The communication over the emulated port type is done once in all three states as follows: \\
 \begin{lstlisting}
-   update_requests->try_write(true, sync, "idle_state");
-   requests_in->get(reqs);
-\end{lstlisting}
+update_request->try_write(true, sync, "state name");
+requests_in->get(reqs);
+mAgent_to_bus0->get(payload0); // separate shared_in ports 
+mAgent_to_bus1->get(payload1); // alongside the emulated port
+           .
+           .
+mAgent_to_bus14->get(payload14)
+\end{lstlisting}   
 
-The sequence allows the emulated port to fetch most recent request from the master agents and update the shared port while the bus matrix is waiting. 
-Even though requests are arbitrated within the port to ensure correct functionality, arbitration is again represented with an if then else cluster to represent this behavior in the properties. 
-If there are no requests this state will loop, which is preferable to using a blocking write. The wait property associated with the blocking write is impossible to prove due to the possible immediate change of \textbf{HGRANTx}. \par
-The payload of the highest priority request is stored in the compound \textit{AS\_regs}, and the bus proceeds to the address phase. (TODO: change bus state to phase, and master phase to state, more clear) 
-The compound \textit{AS\_regs} represent the signals broadcast to the bus by the granted master, and is represented in the properties as visible registers. \par
-In the address phase the values of \textit{AS\_regs} are stored in \textit{DS\_regs} and the operations in the previous phase are repeated, but without the possibility of a loop.
-As seen from Fig.~\ref{fig:OC} the transition to the data phase is unconditional, as all slaves are required to be ready. The data phase is split into a series of substates as seen in Fig.~\ref{eslfsm}.
-Since the master agent interface is represented using mostly shared ports, outputs must be written every clock cycle to successfully prove completeness. The properties generated for the shared outputs
-are only defined at the right hook. In this case it is not sufficient for properties spanning more than one clock cycle. \par
-The request sequence is again carried out, with the difference that it can transition to either of the three states. 
- 
+The payload of the highest priority requesting master is stored in a struct named $AS\_regs$. This struct represents important signals on the address bus, or rather the important signals on the master interface of the master who's transfer is in the address phase. As the state transitions from $Address\rightarrow Data$ this struct is copied to another struct convieniently named $DS\_regs$. If it is a write transfer \textbf{HWDATA} is fetched from the interface of the data bus owner and stored in $DS\_regs$. This struct represent the master payload and is written out to the selected slave through a blocking\_out port. The bus matrix waits for a response from the slave which is written to all master agents through shared\_out ports. The choice to use shared ports for response data and status results in less than ideal generated properties. Now it is necessary to determine these signals in all stages, for this reason they are zeroed when unimportant. The alternative is to return this as a payload over the emulated port. This was decided against to keep this port minimal, since this is not a proven built in interface. \textbf{HREADY} and \textbf{HGRANTx} is as mentioned part of the emulated port. A second output to represent \textbf{HGRANTx} is added to the shared out. This need to be determined through a function. This is accomplished by representing them with enums, which are later refined as function outputs in the properties. \par 
+An important state is inserted to capture the first cycle in the two cycle error response, if an error occurs. This cycle is not abstracted away to successfully determine \textbf{HRESP} in the first cycle. This is an important signal according to protocol, and is therefore accounted for throughout the two cycle response. A state is inserted at the beginning of the data state in a similar manner in the case of a write transfer. Rather than abstracting away the data cycle, it is beneficial that the properties reflect that the data was sampled in the data phase rather than the address phase. Otherwhise the system becomes dependent on its own limitations, which is not ideal for future improvements. \par
+Various implementations of the ESL was experimented with to see which level of abstraction is the most practical. The goal is to achieve the highest possible level of abstraction. At the same time it is beneficial not to make the system dependant on its own limitations, by misrepresenting the protocol in the generated properties. The different levels of abstraction reflect the AHB protocol to a varying degree, but all have about the the same simulation performance. The difference in perfomance is most notable in the proof time of the properties. The current implementation is considered to have the best balance between proof time and protocol representation. \WKSAY{Perhaps this last part belongs in a summary}      
 
-\subsection{Refining properties}
-\label{sub:refine}
-(gotta mention master agent state somewhere)
-This section is an overview of the refinement of the properties, and the completeness proof. The interface to the master agents will be covered for both sides in parallel.
-The signals \textbf{HREADY}, \textbf{HGRANTx} and \textbf{HBUSREQx} are represented with multiple macros in the property suite, which require explanation. 
-\textit{update\_requests} represent all three signals functionally at the ESL, but the generated macros are not sufficient to prove completeness.
-The macros needed to fullfil the requirements are listed in Fig.~\ref{fig_reqmac}, where superflous signals are omitted. 
 
-\begin{figure}[hbt]
-	\centering
-	\begin{minipage}[t]{0.49\textwidth}
-		\centering
-                 \begin{enumerate}
-                   \item \textit{reqs\_sig\_m(x)\_request}
-                   \item \textit{update\_requests\_notify}
-                   \item \textit{update\_requests\_sync}
-                   \item \textit{bus\_to\_mAgent(x)\_sig\_hgrant}
-                   \item \textit{m(x)\_grant}
-                 \end{enumerate}
-              
-	\end{minipage}
-	\begin{minipage}[t]{0.49\textwidth}
-		\centering
-		 \begin{enumerate}
-                   \item \textit{mAgent\_request\_notify}
-                   \item \textit{mAgent\_request\_sync}
-                   \item \textit{bus\_ready\_sync}
-                   \item \textit{bus\_to\_mAgent\_sig\_hgrant}
-                 \end{enumerate}
-              
-	\end{minipage}
-\caption{List of macros for request handling, with bus matrix on the left and master agent on the right}
-\label{fig:reqmac}
-\end{figure}
-
-\newpage
-Brief descriptions of the signals are given in table \ref{tab:reqmac}.
-
-\begin{table}[hbt] 
-  \label{tab:reqmac}
-  \begin{tabular}{r p{10cm}} 
-  \hline
-  Matrix & Description \\
-    \hline
-  \textit{1.} & represents \textbf{HBUSREQx}, macro is determined as input in the completeness description \\
-    \hline
-  \textit{2.} & represents \textbf{HREADY} "or" (\textbf{HREADY} "and" \textbf{HGRANTx}). Macro is determined as output in the completeness description. This is sufficient to determine \textbf{HREADY}, but not \textbf{HGRANTx} \\
-    \hline
-  \textit{3.} & represents the "or" of all \textbf{HBUSREQx}, not part of completeness description, but added to table to provide consistency with 1. in agent. \\ 
-    \hline
-  \textit{4.} & represents \textbf{HGRANTx}, this signal is redefined as boolean and defined as output in the completeness description. \\
-    \hline
-  \textit{5.} & A function that calculates the current value of \textbf{HGRANTx} based on determined inputs and outputs \\
-    \hline
-  Agent & Description \\
-    \hline
-  \textit{1.} & represent \textbf{HBUSREQx}, defined as output in completeness description. \\
-    \hline
-  \textit{2.} & represents \textbf{HGRANT} "and" \textbf{HREADY}. Is not part of completeness description, but added to table to provide consistency with 2. in bus matrix. \\
-    \hline
-  \textit{3.} & represents \textbf{HREADY}, defined as input in completeness description \\
-    \hline
-  \textit{4.} & represent \textbf{HGRANTx}, redefined as boolean. Defined as input in completeness description. \\
-    \hline  \end{tabular}
-\caption{Description of macros for request handling}
-\end{table}
-
-The signals added to provide consistency are not strictly needed to pass any of hte completeness tests. It is rather a security measure to comply with the guidelines for working with clusters mentioned in 
-Sec.~\ref{sub:clust}. Although the interface signals are not represented indentically on both sides, as long as the behavior is guaranteed within the emulated port it will not leave a gap in verification.
-
-\subsubsection{Visible registers}
-(only matrix)
-The macros representing visible registers in the property suite are all variables in the ESL description which store values between the states. In this implementation none of the visible registers directly represent actual registers in the design. They represent input/outputs from/to masters and slaves, based on selection criteria. The selection criteria are generally the states of the master agents, or the conceptual state of the bus. 
+\subsubsection{Properties, and signal macros}
+\WKSAY{Maybe i should start with, what is a macro and what it means to refine it. Or this should be covered in chapter 2 and referred to here}
+To abide by the guidelines for verification of multiple clusters introduced in Sec.~\ref{sub:clust} all communication I/O signals are refined using the common
+top level signals. However, the refinement of the macros representing the emulated port require some explanation. The the macro refinement on both sides will be explained in parallel. 
 \begin{itemize}
- \item \textit{AS\_regs}: Represents the subset of master agent outputs included in the payload, including \textbf{HTRANS} for the agent in its address state. If none it has default values.
- \item \textit{DS\_regs}: Either represents the subset of master agent outputs included in the payload for the agent in its data state. Or represents the output of the slave that has its out notify set. The address offset is effectively accounted for this way. If none apply it has default values
- \item \textit{resp}: Represents the response payload of the slave that has both its in notify and sync set the last 2 cycles. Otherwise it has default values.
- \item \textit{phase/nextphase}: Represents the main CSM of the bus matrix. Selected based on which state macro is true.
+ \item \textit{mAgent\_request\_notify}: Simply refined to represent \textbf{HBUSREQx} in the master agent.
+ \item \textit{Update\_requests\_sync}: Refined to represent all \textbf{HBUSREQx} "or'ed" together in the bus matrix. This is enables the trigger in all properties related to this port. It can also be refined to true, it's simply a matter of which properties become vacuous. The current choice is however more true
+to its intended use. This signal is not sufficient as assumption in the completeness description to represent all \textbf{HBUSREQx}.
+ \item \textit{requests\_in}: A separate macro is generated for each request signals, all refined to their respective \textbf{HBUSREQx} in the bus matrix. These signals are sufficient to use as assumption in the completeness description.  
+ \item \textit{bus\_ready\_sync}: Refined to \textbf{HREADY} in the master agent. 
+ \item \textit{mAgent\_request\_sync}: Refined as \textbf{HREADY} "and'ed" with \textbf{HGRANTx} in the master agent. It is sufficient to use as assumption in the completeness description to represent \textbf{HRGRANTx}. The agent does not care about grant unless the bus is ready. 
 \end{itemize} 
 
-(this all sucks but i definitely need to add that the completeness was initially done using only original I/O)
+The final macro is best explained using a code example:\\
+\begin{lstlisting}
+update_requests_notify : boolean := 
+  bus_to_mAgent0.hready and bus_to_mAgent1.hready or
+  
+  bus_to_mAgent0.hready and bus_to_mAgent0.hgrant or
+  bus_to_mAgent1.hready and bus_to_mAgent1.hgrant
+end macro;
+\end{lstlisting}
+
+This macro is sufficient to determine \textbf{HREADY} as an output in the completeness check because of an added assertion that proves that all readies
+are equal. It is not sufficient to determine \textbf{HGRANTx} as output due to it being "and'ed" with a signal which often has opposite value. It is still added this way to provide consistency with the macro refinements in the master agent. \par
+Another signal which require some explanation is \textbf{HGRANTx}. As the signal above is not sufficient to determine this as an output another solution is required. As mentioned earlier it must be determined using a function. At the ESL it is simply an enum with the name m(x)\_grant. The macro of this enum
+is redefined as a boolean, and assigned a value using another macro which determines the current value of \textbf{HGRANTx} using a combination of inputs
+and outputs. These signals are all listed as assumptions and determination requirements in the completeness description. \par
+As mentioned earlier, the states of the master agents are used to determine the state of the bus matrix. It is not explicitly specified as a port signal at the
+ESL. It is however set as a determination requirement in the completeness description of the master agent. This is sufficient to use it as an input to the
+completeness description of the bus matrix. In the bus matrix this is a macro added by the automatic refinement. \par
+The visible registers that are generated from the ESL are the signals of AS\_regs, DS\_regs and slave response, resp for short. All AS\_regs signals are refined
+to represent its respective input from the master agent interface of whichever master is in its address state. If none apply they all are assigned default values. The same applies for all DS\_regs signals except it applies for any master in its data state. The exception is \textbf{HADDR}, this signals represents the output of the slave port which has its out notify set. This is to account for the address offset. The final signals, resp represent the \textbf{HRDATA} and \textbf{HRESP} of the responding slave, two cycles after its sync signal was received. This signal has default values as well. Representing the visible registers this way allow to transfer the data between properties without mapping a myriad of physical registers, greatly improving proof time. \par
+The final set of refinements are the states. These are mostly represented using either the states of the masters alone, or the states of the masters together with either notify signals from slave ports or the address in DS\_regs. 
+
+
+\subsection{Burst transfer demonstration} 
+\label{sub:burstdemo}
+This section covers a demonstration of a 4 beat incremental burst implemented with SystemC-PPA. For this demonstration a system with a single master and slave
+is used and the address is constrained within the slave address range. Furthermore, the masters and slaves have not been developed to handle an early burst termination. For additional simplicity, the slave is constrained to always be ready to answer its agent in the same cycle. The data size is limited to 32-bit.
+
+\subsubsection{RTL}
+The RTL implementation of the four beat burst is rudimentary but it follows protocol when disregarding early burst termination. The predesigned arbiter and interconnect already support all types of burst transfer. The changes implemented in the master and slave agents are discussed.
+\begin{itemize}
+ \item \textit{Master side}: Register banks are added to the interface between a master and its agent. These are four 32-bit registers each, one for burst write data and a separate register bank for burst read data. The regular payload is extended to include \textbf{HBURST}. A new state is added to the state machine named \textit{addr\_data} which handle the concurrent clocking in/out of both address and data. The address is incremented as data is clocked in or out when \textbf{HREADY} is set. Separate shiftregisters are used for each direction to simplify property refinement. 
+ \item \textit{Slave side}: The slave has a separate shiftregister for address, data and response data. In the case of a burst write, all data and adresses are clocked in. The last data in the burst is sampled, but the slave agent drives \textbf{HREADY} low to extend the transfer until it receives response from the slave. In the case of a burst read it drives \textbf{HREADY} low after the first address is sampled, to extend the transfer until the slave responds with the data. The slave must therefore calculate the remaining addresses internally using the control signals. When the agent receives the data it clocks in the remaining addresses as is clocks out the response data. The need to calculate the addresses internally renders the address register bank redundant in the RTL design. It is however very useful in refinement of property macros. 
+\end{itemize}
+
+The master still completes the burst if it receives an error in the middle of the burst, but the slave is unable to provide an error signal until the final cycle anyway. 
+
+
+\subsubsection{SystemC-PPA and property refinement}
+The emulated port is not essential for a single master/slave system. There are ways to implement the same functionality using blocking in/out ports selected
+based on criteria. However, to illustrate that this burst functionality can be implemented on a multi master system, it is attempted to stay as true to the
+original design as possible. The most feasible way to represent a burst transfer in either direction is by use of blocking ports. With exception of the notify, no signals on a blocking out port are determined unless notify is set. A shared output require all its signals to be determined in every property. The time shifted data and address in a burst transfer payload is problematic in the case of a shared out. Shared input ports can represent any time shifted payload without any issues.
+
+\begin{itemize}
+ \item \textit{emulated port}: The emulated port transfers the burst data between the master agent and bus matrix. Additional blocking read/write ports are added on the master agent side to handle the burst transfers. The \textit{mAgent\_request} port is reconfigured contain a burst helper payload and \textit{update\_requests} is reconfigured to contain the burst read payload. The port uses the burst helper to keep track of whether the transfer is a burst, and if so when to communicate over either burst blocking port. When the transfer is a burst read, the emulated port must forward the data from the bus matrix to the agent. This requires a write to a blocking port within the emulated port. As discussed, this port must operate atomically and this write always calls a wait function. This is not problematic for a single master system, but for multiple masters this port would need to omit the wait function in this instance.       
+ \item \textit{bus matrix}: The bus matrix uses the same input and output ports, only they have been reconfigured to handle burst payloads. In the case of a single transfer only the first data and address element is used. All other elements are zeroed, so the property macros can be zeroed under these conditions as well. In the case of a burst write all address and data elements are fetched from shared ports and written out to the slave. All transfers share the same port and conceptual state for writing out. In the case of a burst read the burst data is read from the slave in port and written directly out to the \textit{update\_requests} port. The original shared out port for \textbf{HRDATA} and \textbf{HRESP}is updated as well. The burst read uses separate conceptual states for both ports. The separation of the read port is necessary to determine if it was a burst read or not. The separation of \textit{update\_requests} was also necessary to remove the compound as a visible register in the generated properties. 
+ \item \textit{master agent}: When the master agent receives a request it also reads a shared in port which contains possible burst data. This data, along with
+the base address, whether it is a burst and transfer direction is written out using a burst helper compound on the \textit{mAgent\_request} port. This is the actual transfer of the data at the ESL, but does not represent the transfer of data in the properties. The write to the burst port represent the burst transfer in the properties. This transfer must end in the final stage of the transfer, meaning all addresses are clocked out and the last data is valid on the bus. The synchronization signal of this porst signals the data phase is over. It is simply too late to exclusively transfer the data here at the ESL.   
+\end{itemize}     
+
+To illustrate how the properties are refined to capture the transfer, some pseudo code examples will be used. The first example covers the data in a burst write from the master agent. \\
+In the RTL description the data is clocked out of a shiftregister to \textbf{HWDATA} output. This sequence is captured in the properties as one operation, all ending at time \textit{t\_end} as follows.
+\begin{lstlisting}
+for timepoints: t_end = t+4
+ assume:
+  at t: address_phase;
+  at t: hburst = 4beat_incremental; 
+  at t: hwrite = write;
+
+ prove:
+   at t_end: data_phase;
+   at t_end: burst_out_hwdata0 := shiftregister_hwdata0_at_t; 
+   at t_end: burst_out_hwdata1 := shiftregister_hwdata1_at_t; 
+   at t_end: burst_out_hwdata2 := shiftregister_hwdata2_at_t;
+   at t_end: burst_out_hwdata3 := shiftregister_hwdata3_at_t;
+\end{lstlisting}
+
+The data sequential transfer of data is represented by refining the macro definitions of \textit{burst\_out} to represent \textbf{HWDATA} at various degrees
+of time shifts. 
+ 
+\begin{lstlisting}
+burst_out_hwdata0 : unsigned := prev(mAgent_to_bus0.hwdata, 3) 
+burst_out_hwdata1 : unsigned := prev(mAgent_to_bus0.hwdata, 2) 
+burst_out_hwdata2 : unsigned := prev(mAgent_to_bus0.hwdata)
+burst_out_hwdata3 : unsigned := mAgent_to_bus0.hwdata 
+\end{lstlisting}
+
+All other important outputs can be added to the burst compound so all important outputs are determined. The state of the master agents are declared as outputs
+in the completeness description in the original design. The state \textit{addr\_data} needs to be represented in the burst compound. 
+\WKSAY{I need to write more about burst}
 
 
 \section{Simulation}
 \label{sec:sim}
 Simulation models carrying out the same operations are designed for both abstraction layers. One of the main benefits of modeling hardware at the ESL is simulation speed, so a time comparison is carried out between the two layers. Designing two corresponding simulation models also offer some verification. 
-The aim of PDD is to do away with RTL simulation all together, but when the ESL description is modeled after an existing hardware architecture it makes sense
-to ensure that the two simulation models behave equivalent. \par
+The aim of PDD is to do away with RTL simulation altogether, but when the ESL description is modeled after an existing hardware architecture it makes sense
+to ensure that the two simulation models behave equally. \par
 Master and slave dummies are connected to the bus matrix. The dummies perform simple operations to maintain a good overview of the operations. 
 The masterdummy alternates between single read and writes. It increments the address by 10 every transaction, and the data by 1 every write. 
 The simulation lasts for the duration of $10^6$ transfers, during which the address wraps around to 0 if it reaches the end of the slave address range. \par
 Assertions are used to control that data is transmitted between the intended dummies. The slave dummy has no information about which master it is operated by. 
 All masters can act independently from each other, and due to the arbitration it is not so simple to monitor from a top level perspective. It is an error prone
-process and it is avoided. Instead, slaves also store their response in a map. The master asserts that the slave it intended to operate is the one that responds. VHDL offer no such high level functions for monitoring, so one part of the protocol is exploited. To recapitulate; A slave ignores \textbf{HWDATA} for reads, and masters ignore \textbf{HRDATA} for writes. This does not forbid any value being present on the signals for testing purposes. The master asserts
-that the same data it writes to the slave is the same that returns. \par
+process and it is avoided. Instead, slaves also store their response in a map. The master asserts that the slave it intended to operate is the one that responds. VHDL offer no such high level functions for monitoring, so it is difficult to assert if the payload reaches its target from a top level perspective.
+\WKSAY{Im going to need to look more into this}
 Accessing the default slave does not increment the transfer count, so choosing a non continuous address range will affect the simulation time.  
 
 \subsection{Starvation}
-The downside of fixed priority arbitration is that there is no guarantee that every master is granted access to the bus. It is important that this feature is
-accurately reflected in the ESL model. There are configurations of masters and slaves attempting to carry out a set of certain tasks where one or more master are never granted access to the bus. This type of configuration is useless and it defeats every purpose of fully verfifying at the ESL if this is not accurately reflected there. \par
-The easiest example of starvation to observe is when all master dummies poll the bus. At the RTL, if the masters are requesting within the slave range a fourth master starves Whereas if they request outside the range it is the fifth master that starves. At the ESL on the other hand, it is the fourth master that starves
-in either case. It is observed that this is due to an exactly three clock cycle delay, not present in the ESL simulation. This is impossible to model using "zero time" increments, but can be modeled by waiting exactly three times the minimum time increment after response from a master agent is received. This is provided that the minimum is above zero. \par
-Will a full system still be represented correctly? maybe the fact that you dont know, if you have a system with many masters use RR.
-
-
+One drawback of fixed-priority arbitration is that lower priority masters may never be granted access to the bus. When this occur depends on the amount of masters, the rate of transfer for each master and the duration of each transfer. \\
+It can be observed from RTL simulation that a fourth master is never granted access if all three higher priority masters request the bus as rapid as allowed by
+the implementation. It is not possible for an untimed ESL simulation to exactly reflect such time dependant behaviour. What is important to accurately reflect in the ESL simulation is whether a master starves forever or not. \\
+In the provided testbench this is modeled accurately because it is easy observe the differences in the simulation types. If all masters request out of range it is the fifth master, rather than the fourth that starves forever. This is because the default slave responds faster and the delay between the agents response to a new request is at least three clock cycles. The fourth master is in this case granted the bus before the first master has time to request anew. \\
+There exists no such delay at the ESL, so the fourth master is never granted access here unless delay of $3*MIN\_WAIT\_TIME$ is added and $MIN\_WAIT\_TIME>0$. \\
+It is not a real scenario that all masters request out of range forever, but it highlights an issue with untimed models and starvation. It is safe to say that a fourth and fifth master will at some point be granted access to the bus, because all masters will not always request access. When a system contains a high number of masters that request access to the bus at varying rates, a $3*MIN\_WAIT\_TIME$ delay inserted is likely not enough to enure equivalent simulation behaviour. \WKSAY{is the only option here a better arbitration protocol?}
 
 \section{Generator}
 \label{sec:generator}
@@ -329,14 +282,32 @@ The AHB system can be generated using a program implemented in C++, where the nu
 masters and slaves are between 1 and 15. An ESL and RTL description, including testbenches are generated followed by a set of operation properties and completeness descriptions. Two short scripts are included which enable the property and completeness check to be carried out with just one command from the
 command line. 
 
-\subsubsection{Automatic property refinement}
+\subsection{Hardware generator}
+The generator reads a textfile \textit{AddressMap.txt} which contains all the slave addresses. This has default values, but a user can configure the addresses freely. If a system has four slaves only the addresses of slave 0-3 will be read. If the address ranges are discontinuous it will affect the generated testbench's simulation time. These addresses are stored in a map, and used throughout the generation. The addresses are also converted to VHDL format and printed to a second text file together with number of masters and slaves to assist the automatic property refinement. \par
+The ESL is generated using a C++ class which has the number of masters and slaves as well as an address map stored internally. The class uses this information to generate the bus matrix, top-level design and testbench. Global helper files are also generated which contain the slave address ranges and other common signals. All files are stored in the output folder of the generator. Not all files in this folder are generated, for example the master agent remains unchanged for every configuration. The generator returns with error if there are any files that do not generate successfully \par
+The RTL is generated in the same way, and to simplify automatic property refinement the same interface and top-level signal names are used on both levels.
+After both ESL and RTL are generated, the program calls a DeSCAM plugin named PrintAHB which creates a refined property set and completeness description for the
+bus matrix and one master agent. Since all master agents are identical in behaviour it is sufficent to prove that one is a sound abstraction of the RTL. 
+   
+\subsection{Automatic property refinement}
 The SystemC-PPA descriptions of the bus matrix and master agent are analyzed with the tool DeSCAM. The tool parses the SystemC-PPA and generates an abstract
-model and properties. A plugin to the tool has been developed, which is tailored to the SystemC-PPA of the bus matrix and master agent. The plugin iterates 
-over the abstract property set, and writes the property set to a file. The plugin inserts the appropriate signal names and logic in the macros as it is written.
- 
+model and properties. A plugin to the tool has been developed, which is tailored to the SystemC-PPA of the bus matrix and master agent. The plugin uses the abstract model to generate the refined property set \par
+The plugin reads the textfile generated in the previous step, this information is stored and it is checked if the input file is the bus matrix or master agent. 
+
+\subsubsection{Bus matrix}
+The plugin uses data from the abstract model to generate macros for all I/O signals, visible registers and states. All macros are automatically refined as they are created. For many signals it is accomplished by simply converting the abstract signal name to the top level signal it represents. For many others it recognizes the signal name and inserts the appropriate refinement. \\
+The refinement of the signals related to the emulated port lead to almost half of the properties being vacuous. For this reason a function checks for the where these assumptions contradicts. The properties with contradicting assumptions are not added to the property set, or property graph. \\
+The completeness description is generated separately by adding the appropriate signals based on the number of masters and slaves.
+
+\subsubsection{Master agent}
+Macros are generated and automatically refined as with the bus matrix. Because all master agents are identical it is only done for master agent number 0. There are no vacuous properties in the master agent except for when there is only a single master connected to the system. This is the wait property of the address state, because the bus is always ready here. This property is not removed because it causes no contradictions in the completeness check. As opposed to the bus matrix, the completeness description for the agent is a fixed string stream which is printed to a file, it never changes. 
+
+
 
 \section{Experimental results}
 \label{sec:results}
+
+
 
 
 

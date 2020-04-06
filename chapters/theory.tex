@@ -30,7 +30,7 @@ An interval property, is a pair of assumptions $A_{t_0}$ and commitments $C_{t_1
 Starting from all possible starting states the property checker searches for an input sequence and a path in the \textit{Finite State Machine} (FSM) where the implication of the $A_{t_0}$, $C_{t_1}$ pair does not hold. The property checker used in this thesis is Onespin 360 DV, or Onespin for short \cite{onespin}. 
 
 \subsection{Complete Interval Property Checking (C-IPC)}
-\label{subsec:cipc}
+\label{sub:cipc}
 A set of properties only guarantee that the design works according to specification if the appropriate termination criterion is used. This criterion was first defined in \cite{bormannbusch}. For a property set to qualify as complete some conditions must be fulfilled. The idea is that, starting from reset there are properties covering every aspect of the I/O behavior and transitions through all important states of the design. The termination criterion hereby referred to as completeness is checked using the property checker Onespin. \TLSAY{Before you can explain what the checker does explain what is actually checked, completeness is not really about the property graph}  A completeness check is not run automatically on the design, rather a completeness description must be manually created. This description contains all inputs, determination requirements (outputs, state variables) and a property graph. It is not generated automatically to help detect faults in the property set rather than having them transferred to the completeness description. The design behavior can be guaranteed by a series of tests.
 \begin{enumerate}
  \item \textit{Reset test}: It is proven that reset can be applied deterministically and that all outputs and state variables are determined after reset based on listed assumptions.
@@ -42,12 +42,12 @@ A set of properties only guarantee that the design works according to specificat
 As long as only inputs are listed as inputs in the completeness description, and all outputs are listed as determination requirements, the collective hold of all four tests prove completeness. Out of sheer relevance to this thesis key aspects of the process on how to achieve completeness on a design is provided in the following section. 
 
 \subsection{Gap Free Verification}
-\label{subsec:gfv}
+\label{sub:gfv}
 Out of consistency some terms from the previous section are redefined. A state variable is redefined as a \textit{Visible register}. It is a symbolic register that transfers information from the end of one property, to the start of another. It is not necessarily used to determine the state of the system. This is where the term \textit{Conceptual state} comes in. Earlier referred to as important states, conceptual states are abstractions of actual states in the designs FSM \TLSAY{why not stick to important states, if it is the same thing?}. It may directly map to a state in the FSM, parts of one,  contain many or be a collection of visible registers and inputs of a design. The process of creating a property set that proves completeness is divided in four phases. The specifics of the four phases will not be recounted here, for that the reader is referred to \cite{gapfree}. Rather some implications and key information are re-described. \par
 The process starts with the definition of the \textit{Conceptual State Machine} (CSM) and a set of skeleton properties are made to represent this CSM in the property graph. All visible registers required to correctly represent the assumptions of the properties are added as local determination requirements and determined at right hook in all properties. By making sure all properties only assume inputs and these registers (at correct time point) the successor test will hold. Further, all outputs are listed as determination requirements together with the remaining visible registers needed to help determine them, they are subsequently determined in all properties. If this is done correctly the determination test will hold. Outputs are only determined based on inputs and visible registers. If the mapping of a visible register is incorrect or missing, this is sure to appear as an error in the completeness check. If all possible transitions of the CSM is covered by properties, the case split test will hold. If not, these operations are identified with help of the debugger and added until the case split test holds. The reset test is a special case of these three tests for the reset property, the difference being that it has no predecessor. It is checked alongside the other three tests. When all four tests hold the property set is complete. 
 
 \subsubsection{Clusters}
-\label{subsub:clust}
+\label{sub:clust}
 When developing a property set it is sometimes necessary consider the \textit{Design under Verification} (DuV) as multiple modules communicating with each other. It is not always beneficial to divide the DuV at the RTL module interfaces. The term cluster is therefore introduced to avoid confusion between the two. A design is ideally verified in a single cluster, to keep abstraction at the highest level. In some cases verifying a design in a single cluster is not feasible. The main reason for this is parallelism.\\ 
 \begin{wrapfigure}{l}{5.5cm}
 \includegraphics[width=5.5cm]{figs/Verif/parallell.png}
@@ -97,7 +97,7 @@ Communication at the hardware level is divided in two main categories, asynchron
 
 
 \subsection{Port interfaces}
-\label{subsec:ports}       
+\label{sub:ports}       
 In SystemC-PPA there is three port interfaces available, two of which model the asynchronous and unilateral synchronization mentioned above. The last provide a means of modeling a volatile memory. 
 
 \begin{enumerate}
@@ -258,6 +258,22 @@ After a transfer has been started only the active slave has the ability to end i
 
 If the address provided on the address bus is outside the range of any existing slave the default slave response must be provided. If the encoding on \textbf{HTRANS[1:0]} is \textit{idle} or \textit{busy} default slave must provide a zero cycle okay response. Otherwise the default slave must provide the two cycle error response. 
 
+\subsection{Burst transfers}
+With burst transfers several related addresses are accessed either incrementally or by wrapping on an address boundary. The AHB protocol allows for incremental
+ and wrapping bursts of 4,8 and 16 beats as well as incremental bursts of undefined length. In this section only a four beat incremental burst is covered. The reader is referred to the AMBA specification for the full burst overview \cite{amba}.
+
+\begin{figure}[hbt]
+    \begin{center}
+        \includegraphics[width=0.8\textwidth]{figs/AHB/burst.png}
+    \end{center}
+    \caption{A 4 beat incremental burst transfer}
+    \label{fig:burst}
+\end{figure}
+
+The four beat incremental burst is used to transfer four units of data to or from the selected slave. The address is calculated by incrementing the base address
+with amount of bytes encoded on \textbf{HSIZE[2:0]}. Although the address can be calculated using the other fixed control signals, the master must provide the correct address for each beat of the burst. As seen between $T2$ and $T4$ in figure \ref{fig:burst}, wait states can be inserted to bursts as well. \par
+There are circumstances where bursts are not allowed to complete because a master loses ownership of the bus. There are however arbitration schemes where this is disabled. If a master receives an error response during a burst it is free to choose whether to complete or abort the transfer. The master must make sure
+that an incrementing burst does not cross a 1kB boundary.  
 
 
 
