@@ -180,7 +180,7 @@ update_requests_notify : boolean :=
 end macro;
 \end{lstlisting}
 
-\WKSAY{AS\_regs are refined to represent the address bus if any agent is in the address phase, DS_regs are optimized to represent data on the data bus in the data cycle, and previous values on AS_regs, or default values. States are optimized so that only default master state, address and data owner are used. \\ need to talk about vacuous properties for 1 and 2 masters. Some need to remain for the case split test to hold. In some cases they hold but witness is uncreachable}
+
 
 This macro is sufficient to determine \textbf{HREADY} as an output in the completeness check because of an added assertion that proves that all readies
 are equal. It is not sufficient to determine \textbf{HGRANTx} as output due to it being "and'ed" with a signal which often has opposite value. It is still added this way to provide consistency with the macro refinements in the master agent. \par
