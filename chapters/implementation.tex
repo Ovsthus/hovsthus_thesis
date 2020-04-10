@@ -19,11 +19,13 @@ it is often referenced online when "the how" of protocol implementation is inqui
 
 \subsection{Existing hardware}
 \label{sub:exist}
+\TLSAY{This section is confusing. You're talking about existing hardware, but also about, what has been proven, ESL etc ... don't like it too much. Feels unstrucutured} 
+
 The existing hardware is taken from the \textit{ahb\_system\_generator} found at \\
- www.opencores.com \cite{ahbsys}. This architecture is already structured for the means of generation and is implemented in VHDL, although is doesn't support wide data bus configurations it is the ideal candidate for this work. The master and slave agents was not taken from this source, they were rather redesigned to match SystemC-PPA compliant modules. This architecture supports fixed-priority, round robin and random priority arbitration. There are also modified versions of these arbitrations, where a grant is kept as long as \textbf{HBUSREQx} is asserted. The chosen arbitration for this work is the modified fixed-priority. The possibility of starvation is a drawback, but it is far less complicated to model at the ESL than for example round robin. Due to limited time, burst, split and retry transfers are not implemented in the agents. The modified extension to fixed-priority is selected to simplify an implementation of burst transfers. A study of this is presented in Sec.~\ref{sub:burstdemo}. The hardware is represented in Fig.~\ref{fig:hw_toplev} as the arbiter, decoder and wires connecting the agents. For simplicity it will collectively be referred to as the bus matrix. \par 
+ www.opencores.com \cite{ahbsys}. This architecture is already structured for the means of generation and is implemented in VHDL, although i\TLREP{s}{t} doesn't support wide data bus configurations it is the ideal candidate for this work. The master and slave agents \TLSAY{present!} \TLDEL{was} not taken from this source, they were rather redesigned to match SystemC-PPA compliant modules. This architecture supports fixed-priority, round robin and random priority arbitration. There are also modified versions of these arbitrations, where a grant is kept as long as \textbf{HBUSREQx} is asserted. The chosen arbitration for this work is the modified fixed-priority. The possibility of starvation is a drawback, but it is far less complicated to model at the ESL than for example round robin. Due to limited time, burst\TLSAY{this is confusing. Explain better, that a proof of concept on burst is one}, split and retry transfers are not implemented in the agents. The modified extension to fixed-priority is selected to simplify an implementation of burst transfers. A study of this is presented in Sec.~\ref{sub:burstdemo}. The hardware is represented in Fig.~\ref{fig:hw_toplev} as the arbiter, decoder and wires connecting the agents. For simplicity it will collectively be referred to as the bus matrix. \par 
 For reasons discussed in Sec.~\ref{sec:syslev} a property set was manually described to discover a suitable abstraction of this hardware. In the process it was
 discovered that the default slave did not provide a zero cycle OKAY response when it was supposed to. It did however, provide the two cycle ERROR response as 
-required by the protocol. This did not change any functionality of the design, and would never show up in simulation unless a master or agent was sensitive to this. The correct zero cycle okay response was added to simplify the completeness proof. 
+required by the protocol. This did not change any functionality of the design, and would never show up in simulation unless a master or agent was sensitive to this. The correct zero cycle okay response was added to simplify the completeness proof. \TLSAY{Lot's of detail ... not sure how to put this in context} 
 
    
 \subsection{Master agent}
@@ -32,7 +34,7 @@ required by the protocol. This did not change any functionality of the design, a
 \caption{Master agent FSM}\label{fig:rafsm}
 \end{wrapfigure}  
 
-The master agent implements the master side of the AHB protocol. It is initialized to the \textit{from\_master} state, where it awaits a payload. The $agent\leftrightarrow master$ interface implements the four phase handshake in both directions. In other words, it is blocked pending a synchronization signal from the master. The payload represents only a subset of the AHB master interface. The remaining signals are hardwired to default values. \textbf{HTRANS} is an exception, this signal is controlled by the agent throughout the transfer. In an ESL description it is sometimes beneficial to use enums to represent certain encodings and signals. This is to enhance readability for the designer. These enums have been directly transferred to the RTL description. The entire payload is listed in table \ref{tab:mpayload}, where unchanged signals are marked with a dash.  
+The master agent implements the master side of the AHB protocol. It is initialized to the \textit{from\_master} state, where it awaits a payload. The $agent\leftrightarrow master$ interface implements the four phase handshake in both directions. In other words, it is blocked pending a synchronization signal from the master. The payload represents only a subset of the AHB master interface. The remaining signals are hardwired to default values. \textbf{HTRANS} is an exception, this signal is controlled by the agent throughout the transfer. In an ESL description it is sometimes beneficial to use enums to represent certain encodings and signals. This is to enhance readability for the designer. These enums have been directly transferred to the RTL description.\TLSAY{The enum stuff does not belong in this overview} The entire payload is listed in table \ref{tab:mpayload}, where unchanged signals are marked with a dash.  
 
 \begin{table}[hbt] 
   \label{tab:mpayload}
@@ -54,7 +56,7 @@ The master agent implements the master side of the AHB protocol. It is initializ
 
 The return payloads consists of only \textbf{HRDATA} and \textbf{HRESP}. A key drawback that is obvious from the FSM is that the agent will return a payload 
 to the master regardless of transfer direction. Surely throughput would be higher if the agent bypassed this state in the case of a write. If the transfer
-status is not reported back to the master, any error would only be known locally in the agent. It would be possible to assert an error signal that is checked 
+status is not reported back to the master, any error would only be known locally in the agent. \TLSAY{Just explain the feedback path ... no need to discuss pros and cons here} It would be possible to assert an error signal that is checked 
 before starting a new transfer. However, any predesigned code for a CPU using the AHB protocol i.e linux, is likely to expect the error to apply to the current transfer, not the previous. To avoid limiting the bus to systems with manually tailored code, a payload is returned to the master in any case. This comes
 at the cost of latency, but as discussed this is a reasonable trade-off. \par
 An overview of a transfer is provided with respect to the FSM.
@@ -65,6 +67,8 @@ An overview of a transfer is provided with respect to the FSM.
  \item \textit{Data}: When the bus is ready, return payload is read from the AHB interface and written to the master.
  \item \textit{to\_master}: Agent waits for a synchronization signal from the master. The master should already be asserting its synchronization signal, but this is not a requirement.   
 \end{enumerate}
+\TLSAY{This should be very close to the graphics... that's the reason for this section isn't it?} 
+
 
 The sequence of operations above does not seem to match the sequence in the protocol covered in Sec.~\ref{sec:ahb} in the previous chapter. It is, however, 
 understood that address/control and data can have arbitrary values outside their respective phases, as long as the intended values are present in their 
@@ -77,8 +81,12 @@ respective phases. It is therefore also not an issue that they have the intended
 \caption{Slave agent FSM}\label{fig:rsfsm}
 \end{wrapfigure}  
 
+ 
 The slave agent implements the slave side of the protocol. The transitions in the FSM of Fig.~\ref{fig:rsfsm} have been simplified to make the diagram more readable. When the slave agent is selected and the start of a transfer is detected it samples the address and control signals. An additional data cycle is
-required to sample the data in the case of a write transfer. The transfer payload is written out on the slave out port and the slave processes the request. The slave responds with status, and data in the case of a read. If the status is error the slave agent inserts an error cycle to provide the two cycle error response. \par
+required to sample the data in the case of a write transfer.
+\TLSAY{I liked the enum with an explanation for each state. Maybe you can do it here too? In general I'm somewhat confused. You're talking about the implementation here? You're always mixing in Property stuff ... I don't like it. Why not explain the implementation. Then explain the properties with examples and pinpoint specific things?}
+
+ The transfer payload is written out on the slave out port and the slave processes the request. The slave responds with status, and data in the case of a read. If the status is error the slave agent inserts an error cycle to provide the two cycle error response. \par
 The slave agent drives \textbf{HREADY} low in all states except idle. This extends the data phase of the transfer and gives the slave time to process the request. There are no formal restrictions on the amount of wait states that can be inserted, but a total of 16 should not be exceeded for more accurate performance analysis. \par
 In addition to the slave ports implementing a four phase handshake, two additional features are added to assist the system level description. The slave base address is subtracted before writing the address out to the slave. The slave only knows of its own address range starting from zero. The second feature is that the return data is zeroed after it has been sampled. The reason for this is related to the generated properties. \par
 The output \textbf{HRDATA} to each master is assigned a value in each property. This can either be an updated value or the previous value. In either case, it is the \textbf{HADDR} of the granted master that determine which slave has its \textbf{HRDATA} broadcast on the response data bus. Instead of always keeping track of \textbf{HADDR}, it is easier to zero this value, when it is not valid. Why \textbf{HRDATA} is not only valid if a notify is set becomes clear when discussing the master agent interface in Sec.~\ref{sec:syslev}.   
@@ -100,7 +108,20 @@ parallelism, and a single thread's lack of capability to represent it. Regardles
 a message and proceed to request. This operation requires the output \textit{master\_to\_mAgent(x)\_notify} to be de-asserted. In addition, knowledge of this request and the message must be stored for use in a later conceptual state. This is not practical to represent at the in a single SystemC-PPA, if it is even possible. \par
 Considering that the ESL needs to represent a relatively complex existing RTL description, it is necessary to manually write the properties bottom-up to get an idea of how the system level description of the bus matrix must be formed.
 
-\subsection{Manual property set}
+\TLSAY{I'd flip the statement here. Because there is an existing implementation it makes sense to start bottom-up and fit a SystemC-PPA to the existing implementation.} 
+
+\subsection{see below}
+\TLREP{Manual property set}{Bottom-up property creation}
+
+\TLSAY{This reads more like a report of the steps you took. But the aim here is that you should explain how a property set can be extracted bottom up. What's the general idea? Where to start. Explain the easy stuff. Then make a paragraph on the complicated things. Your text reads like this: I did this, then there was this problem, so I did this, well then there was another issue, so I had to do that ... Instead you'll should go like this "In order to extract properties bottom-up you first do a (with the goal x), then b (with goal x), then c ... Following this schematic the following problems can occur ... Due to the some special things of the protocol step 2 was complex because (explain the problem). 
+
+That counts for all sections in this chapter.
+
+Furthermore, I'm missing graphics and property examples. This is way too much text. I'll get bored and confused really quick. 
+
+I'll gives this section another read once you reworked. 
+  } 
+
 During the development of the initial property set it became clear that to determine the state of the bus, knowledge of past behavior is required. It is not possible to determine every state of the bus by observing internal registers of the design alone. There are registers storing which master owns the address and data bus, but this provides no information on the state of the bus when the owner is the default master. A solution is to look at past values of the transfer  control signals, but knowing how far back to look would require a fixed amount of wait states. Another much simpler alternative is to exploit that master agents are verified in separate clusters. The state of the master agents are determined as outputs to their clusters and as inputs to the bus matrix cluster. The state of the bus is now possible to determine at any time by observing the states of the master agents. \par
 For all the completeness checks introduced in Sec.~\ref{sub:cipc} to hold, certain attributes must be captured in the properties. 
 \begin{enumerate}
