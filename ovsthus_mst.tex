@@ -21,19 +21,81 @@
 \usepackage{color}
 \usepackage{multirow}
 \usepackage[square,numbers]{natbib}
+\usepackage{xcolor}
 \usepackage{listings}
+\colorlet{mygray}{black!30}
+\colorlet{mygreen}{green!60!blue}
+\colorlet{mymauve}{red!60!blue}
+
+\lstnewenvironment{C++}{
+\lstset{
+  backgroundcolor=\color{gray!10},  
+  basicstyle=\ttfamily,
+  columns=fullflexible,
+  breakatwhitespace=false,      
+  breaklines=true,                
+  captionpos=b,                    
+  commentstyle=\color{mygreen}, 
+  extendedchars=true,              
+  frame=single,                   
+  keepspaces=true,             
+  keywordstyle=\color{blue},      
+  language=c++,                 
+  numbers=none,                
+  numbersep=5pt,                   
+  numberstyle=\tiny\color{blue}, 
+  rulecolor=\color{mygray},        
+  showspaces=false,               
+  showtabs=false,                 
+  stepnumber=5,                  
+  stringstyle=\color{mymauve},    
+  tabsize=3,                      
+  title=\lstname                
+}}
+{}
+
+\lstnewenvironment{VHI}{
+\lstset{
+  backgroundcolor=\color{gray!10},  
+  basicstyle=\ttfamily,
+  columns=fullflexible,
+  breakatwhitespace=false,      
+  breaklines=true,                
+  captionpos=b,                    
+  commentstyle=\color{mygreen}, 
+  extendedchars=true,              
+  frame=single,                   
+  keepspaces=true,
+  keywords=[2]{or, and, "000", "001", resize, (, )},
+  keywords=[3]{macro, end, if, elsif, true},  
+  keywords=[4]{boolean, unsigned},           
+  keywordstyle=[2]\color{mymauve}, 
+  keywordstyle=[3]\color{blue},
+  keywordstyle=[4]\color{mygreen},                      
+  numbers=none,                
+  numbersep=5pt,                   
+  numberstyle=\tiny\color{blue}, 
+  rulecolor=\color{mygray},        
+  showspaces=false,               
+  showtabs=false,                 
+  stepnumber=5,                  
+  stringstyle=\color{mymauve},    
+  tabsize=3,                      
+  title=\lstname                
+}}
+{}
 
 \newcommand\tab[1][1cm]{\hspace*{#1}}
 
 
-\lstset{
-	basicstyle=\ttfamily,
-	tabsize=4,
-	numbers=left,
-	columns=fullflexible,
-	showstringspaces=false,
-	commentstyle=\color{gray}\upshape
-}
+%\lstset{
+%	basicstyle=\ttfamily,
+%	tabsize=4,
+%	numbers=left,
+%	columns=fullflexible,
+%	showstringspaces=false,
+%	commentstyle=\color{gray}\upshape
+%}
 
 \renewcommand\lstlistingname{Listing}
 \renewcommand\lstlistlistingname{List of Codes}
@@ -61,6 +123,18 @@
 
 \newcommand{\COMMENT}[1]{\textbf{\color{red}[#1]}}
 \newcommand{\COMMENTSUPERVISOR}[1]{\textbf{\color{blue}[#1]}}
+
+% ITL stuff
+\newcommand{\ITLKW}[1]{{\color{blue} #1}}
+\newcommand{\ITLIW}[1]{{\color{mygreen} #1}}
+\newcommand{\ITLRW}[1]{{\color{mymauve} #1}}
+\newcommand{\ITLAS}[1]{\ITLKW{at t: }}
+\newcommand{\ITLCT}[1]{\ITLKW{at t+{}#1: }}
+\newcommand{\ITLOR}{\ITLKW{\textbar\,\textbar}}
+\newcommand{\ITLENDL}{\ITLKW{;}}
+\newcommand{\ITLPREV}{\ITLKW{prev}}
+\definecolor{DARKGREEN}{RGB}{0,100,0}
+\newcommand{\ITLCOMMENT}[1]{{\color{DARKGREEN}- - #1}}
 
 \begin{document}
 
@@ -156,9 +230,9 @@ Kaiserslautern, \today}
 \input{chapters/implementation.tex}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% \chapter{Performance analysis}
-% \label{chap:performance}
-% \input{performance_analysis.tex}
+\chapter{Design Procedure}
+\label{chap:design}
+\input{chapters/design.tex}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \chapter{Summary and outlook}
