@@ -105,6 +105,7 @@ All the signals on the AHB interface which are hardwired are set as the system s
 
 \newpage
 \subsection{Bus matrix}
+\label{sub:bus-matrix}
 \begin{wrapfigure}[18]{l}{5.5cm}
 \includegraphics[width=5.5cm]{figs/ESL/Bus_fsm_new.png}
 \caption{Bus matrix FSM}\label{fig:busfsm}
@@ -169,10 +170,9 @@ data_own = addr_own;
 \textit{AS\_regs} are subsequently avaiable for storing the payload of a new requesting master agent. If there are none, default values are assigned. The state transitions unconditionally to \textit{Data}.
 
 \subsubsection{Data}
-The variable \textit{DS\_regs.haddr} is used to determine which slave the master agent intends to communicate with. \textit{DS\_regs.hwrite} indicates whether or not the transaction is a write. If the transaction is a write, an important state is inserted and the payload data of the data bus owner is fetched.
+The variable \textit{DS\_regs.haddr} is used to determine which slave the master agent intends to communicate with. \textit{DS\_regs.hwrite} indicates whether or not the transaction is a write. If the transaction is a write, the payload data of the data bus owner is fetched.
 \begin{C++}
 if(DS_regs.hwrite == AHB_WRITE){
-insert_state("Data_cycle");
 mAgent_to_bus0->get(payload0);
 mAgent_to_bus1->get(payload1);
 DS_regs.hwdata = getHwdata(payload0, payload1, data_own);
@@ -181,7 +181,7 @@ DS_regs.hwdata = 0;
 }
 \end{C++}  
 
-The request is subsequently communicated to the slave. The slave address offset is subtracted and the request is handled by the slave. If the response payload signals error, an important state is inserted which models the two cycle error response.
+The request is subsequently communicated to the slave. The slave address offset is subtracted and the request is handled by the slave. If the response payload signals error, an error is excplicitly signaled to each master agent.
 \begin{C++}
 DS_temp.haddr = DS_temp.haddr - slave0_start;
 bus_to_slave0->write(DS_temp, "slave_agent0_writes_out");

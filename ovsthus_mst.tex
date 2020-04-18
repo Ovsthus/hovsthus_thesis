@@ -8,6 +8,9 @@
 \usepackage{subcaption}
 \usepackage{wrapfig}
 \usepackage{lipsum}
+\usepackage{pgfplotstable}
+\usepackage{pgfplots}
+\pgfplotsset{width=13cm,compat=1.9}
 
 \usepackage[english]{babel}
 \usepackage{setspace}
@@ -66,8 +69,8 @@
   extendedchars=true,              
   frame=single,                   
   keepspaces=true,
-  keywords=[2]{or, and, "000", "001", resize, (, )},
-  keywords=[3]{macro, end, if, elsif, true},  
+  keywords=[2]{or, and, "000", "001", resize, (, ), :, ;},
+  keywords=[3]{macro, end, if, elsif, true, is, property, at, t, t_end, false, reset_sequence, assume, prove, freeze },  
   keywords=[4]{boolean, unsigned},           
   keywordstyle=[2]\color{mymauve}, 
   keywordstyle=[3]\color{blue},
@@ -137,6 +140,8 @@
 \newcommand{\ITLCOMMENT}[1]{{\color{DARKGREEN}- - #1}}
 
 \begin{document}
+
+
 
 \thispagestyle{empty}
 
