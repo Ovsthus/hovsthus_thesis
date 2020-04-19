@@ -2,53 +2,15 @@ In Sec.\ref{sec:sum} of this chapter the work presented in chapter \ref{ch:impl}
 
 \section{Summary}
 \label{sec:sum}
-In this thesis an AMBA-AHB system generator is implemented, which generates an AMBA-AHB system on both the Electronic System Level and the Register Transfer Level. Furthermore, a complete set of operation properties are generated based on the ESL description, which are automatically refined to prove that the generated ESL description is a sound abstraction of the generated RTL. \par
-The RTL implementation of the AMBA-AHB arbiter, decoder and interconnect logic was taken from an existing open source implementation, to reduce design effort. Master and slave agents were designed to interface the AMBA-AHB with SystemC-PPA compatible ports. These agents fully comply with the protocol to the extent that they do not support burst transfers or split/retry responses. \par
-The development of the ESL model uncovered some challenges in describing a multi-master arbitrated bus architectures with SystemC-PPA. These challenges were solved by separating the master agents into their own SystemC-PPA and implement a custom pseudo port interface to enable proper control flow without generating many unwanted important states. The fixed-priority arbitration scheme has the drawback of starvation, which is problematic to correctly represent in an untimed simulation model. The difference in simulation time between the two models was measured to be orders of magnitude. \par
-There are no internal registers of the open source architecture which indicate that the default master is operating in the data phase of a transfer. The states of the master agents were declared as outputs to their clusters, which enables the state of the default master to be used to help determine the state of the bus. Many signals of the bus are not updated on a clock edge, so the visible register refinement need to use default values if the bus is not in a certain state. The generated ESL is proven to be a sound abstraction of the RTL for every configuration of masters and slaves. The proof is given by a completeness check where all properties and all completeness tests hold.  
+
  
 
 \section{Outlook}
 \label{sec:outl}
-This work serves as a good starting point for representing the AMBA-AHB using SystemC-PPA. Furthermore, it is shown that it is feasible to generate the system for an arbitrary number of masters and slaves, and that a complete set of properties can be automatically refined to hold on the design. There are a number of suggested improvements for the implementation, which are described in Sec.~\ref{sec:impr}. The current implementation only allows for single transfers, which leaves much of the protocol out. In Sec.~\ref{sec:furth} it is discussed how the system can be extended to include these features, and the limitations.
+
 
 \subsection{Suggested improvements}
 \label{sec:impr}
-\subsubsection{Dedicated port interface}
-The current implementation of the custom port is a SystemC module which is excluded from the property generation. Although the module follows the rules of SystemC-PPA, it is not possible to make the properties hold on the design for the same reason that it was implemented. With the current implementation of the port, the generated properties do not verify that the arbitration represented in the bus matrix matches the arbitration occuring during simulation. It is, however, in this case possible to manually verify that it matches because of the simplicity of fixed priority arbitration. Unless there is a solution to verifying the entire system in a single cluster, which is unlikely, it is beneficial to integrate this port type into SystemC-PPA. There are two approaches to this, with varying degree of complexity and flexibility. 
-
-\begin{enumerate}
- \item The request on the master agent side remains as is, but ideally it would write a void value rather than a boolean. The port used for ready issues no event notify, but it waits for an event. On the bus matrix side the port is a non blocking read which always calls a wait and provides the requests. This port handles arbitration internally, but as a result it must be ensured that the corresponding arbitration scheme is represented in the bus matrix PPA. This implementation will increase ESL simulation speed, and it removes the need to check for vacuous properties in the generator. It is also possible to use with other bus protocols using the same arbitration scheme. However, it leaves little advantage to implementing burst transfers on this system. 
- \item The port is integrated as above, and extended to include payloads. Furthermore it is implemented such that data can travel in both directions. As was discussed regarding burst in Sec.~\ref{burstdemo}, the data in a burst transfer should be written to a blocking\_out port. Implementing a two way blocking interface would make the burst transfer extension relatively easy to implement. Furthermore, the request payload can be transmitted through this burst. The port selects the payload based on the arbitration scheme, which removes much clutter from the ESL description. If properties related to the arbitration were generated from the port interface, it would not be necessary to represent it again in the bus matrix PPA, resulting in a much cleaner design. The properties generated from this must reflect that the payload originates at the granted master agent interface and not the output of the address mux. Otherwise there would be a gap in verification
-\end{enumerate}
-
-\subsubsection{Round robin}
-The fixed priority arbitration scheme leave lower priority master vulnerable to starvation. Furthermore, as highlighted in Sec.~\ref{sec:sim}, modeling starvation in an untimed simulation model may not yield adequate representation of RTL behavior. If the round robin arbitration scheme can be guaranteed within the emulated port interface, it is a much better alternative to fixed priority arbitration. \par
-It can be implemented as an algorithm within a constant function in the bus matrix PPA, where the inputs to the function are the requests and a turn variable. The visible register of this turn variable can be mapped to a physical register with the path \textit{matrix/ahb\_arb0/turn}. There is no more macro refinement required than this for the implementation, provided that the algorithm is within a constant function. The function can be implemented as follows. \WKSAY{look into this}.
-And it can be added to the generator as follows: \WKSAY{look into this as well}.
-
-
-\subsection{Further implementation}
-\label{sec:furth}
-\subsubsection{burst transfers}
-The demonstration of a four beat incremental burst in Sec.~\ref{sub:burstdemo} shows that it is feasible to implement burst transfers in this implementation. Although, if a dedicated port interface is not developed, the blocking\_out port transporting burst read data within the emulated port must never call a wait function. It is possible to implement four, eight and sixteen beat incremental and wrapping burst for all supported data sizes. \par
-The shiftregisters in the RTL are extended to 16 32-bit registers. The byte and half word data sizes will use the same amount of registers as the word size transfers, the only difference is in the address increments. The write data shiftregister needs no modifcation other than the extension to 16 words. For shorter bursts, the unused registers remain zero and do not need to be altered in the ESL description. The read data shiftregister is best to reset to zero after each transaction, to avoid having to account for old data in the ESL description. \par
-The ESL description devloped for the burst demonstration can be extented to include the other burst types, by adding a condition and state for each of the transfer types. The transaction payload is extended to 16 addresses and 16 data variables. The assigment of values to the address variables should be done through a constant function, so that the different data sizes and address boundaries can be accounted for. The masters must internally ensure that a incremental burst transfer that crosses a 1kB boundary is never initiated. This need to be added as a constraint in the property set as well. \par
-Some research remains into how the control signals of the master agent can be effectively represented for all burst types, as well as \textbf{HGRANTx} in the bus matrix. A suggestion for the latter is to use the modified arbitration schemes which disable early burst termination, and leave \textbf{HGRANTx} undefined during the burst transfer. With the early burst termination disabled, the grant will not change until \textbf{HBUSREQx} is de-asserted. For the control signals the following macro refinement is envisioned.
-\begin{lstlisting}
-macro burst_out_hbusreq0 : unsigned :=
- if(hburst = wrap4 or hburst = incr4) then
-  prev(to_bus0.hbusreq, 3) & ..... & to_bus0.hbusreq
- elsif(hburst = wrap8 or hburst = incr8) then
-  prev(to_bus0.hbusreq, 7) &  ..... & to_bus0.hbusreq
-                 .
-                 .
- else 
-  to_bus0.hbusreq
- end if;
-end macro;
-\end{lstlisting}  
-
 
 
 
