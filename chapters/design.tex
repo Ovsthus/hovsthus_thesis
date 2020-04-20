@@ -175,10 +175,133 @@ The master agent is refined to hold on master agent zero in a similar, but simpl
 
 \section{Simulation}
 \label{sec:sim}
+Corresponding simulation models are generated for the RTL and ESL model. The simulation models offer a second layer of verification that the operations are carried out as intended and that the architecture behave equally at both levels. \par
+Master and slave dummies which carry out simple read and write operations are connected to the top-level design. The slave dummy has no knowledge of its address offset, or which master is operating it. Similarly, the master can not distinguish if the slave it intended to access is the slave which is responding. VHDL does not offer the same high level capabilities as C++, but the simulation models should operate on equal principles. This is accomplished by adding an identification number as input to the slave dummies in the RTL model and global functions to encode and decode identification numbers in both models. 
+\begin{itemize}
+ \item \textit{Write}: The master dummy calls a function from the included \textit{globals.h/.vhdl}, which takes target address as input argument and returns an ID number. The master adds this ID number to the top 8 bits of its payload data. The slave dummy asserts that the top eight bits of the received data matches its own ID number. The ESL slave dummy must translate its object name to the corresponding ID number with a function available in the same included file. 
+ \item \textit{Read}: The slave dummy adds its ID number to the top eight bits of its response data. The master dummy uses a function to assert that the response ID matches its target address ID.   
+\end{itemize}  
+
+It is highly unlikely that errors in the global functions correspond to errors in the design, or in other words masks them. The simulations are run for $10^6$ transfers, which are counted within the slave dummies, out of range transfers are therefore not counted and affects simulation time.  
+
+\subsection{Starvation}
+One drawback of fixed-priority arbitration is that lower priority masters may never be granted access to the bus. When this occurs depend on the amount of masters, the rate of transfer for each master and the duration of each transfer. The plot below show when the masters are granted access to the bus, based on the duration and transfer rate in the RTL model. The different transfer durations are separated for each run to get comprehensive results and the slave dummies respond without delay. The plot shows a clear separation and linear relationship between the different transfer conditions and rates. 
+
+\begin{tikzpicture}
+\begin{axis}[
+    title={Master grant delay},
+    xlabel={Master granted},
+    ylabel={Clock delay between transfers},
+    xmin=1, xmax=15,
+    ymin=0, ymax=60,
+    xtick={1,2,3,4,5,6,7,8,9,10,11,12,13,14,15},
+    ytick={0,2,4,6,8,10,12,14,16,18,20,22,24,26,28,30,32,34,36,38,40,42,44,46,48,50,52,54,56,58,60},
+    legend pos=north west,
+    ymajorgrids=true,
+    grid style=dashed,
+]
+\addplot[
+    color=blue,
+    mark=square,
+    ]
+    coordinates {
+    (1,0)(2,0)(3,0)(4,0)(5,2)(6,4)(7,6)(8,8)(9,10)(10,12)(11,14)(12,16)(13,18)(14,20)(15,22)
+
+    };
+    \addlegendentry{Out of range}
+
+\addplot[
+    color=purple,
+    mark=square,
+    ]
+    coordinates {
+    (1,0)(2,0)(3,0)(4,2)(5,6)(6,10)(7,14)(8,18)(9,22)(10,26)(11,30)(12,34)(13,38)(14,42)(15,46)
+
+    };
+    \addlegendentry{In range write success/read error}
+
+\addplot[
+    color=black,
+    mark=square,
+    ]
+    coordinates {
+    (1,0)(2,0)(3,0)(4,1)(5,4)(6,7)(7,10)(8,13)(9,16)(10,19)(11,22)(12,25)(13,28)(14,31)(15,34)
+    };
+    \addlegendentry{In range read success}
+
+\addplot[
+    color=gray,
+    mark=square,
+    ]
+    coordinates {
+    (1,0)(2,0)(3,0)(4,3)(5,8)(6,13)(7,18)(8,23)(9,28)(10,33)(11,38)(12,43)(13,48)(14,53)(15,58)
+
+    };
+    \addlegendentry{In range write error}
+
+\end{axis}
+\end{tikzpicture}
+
+
+The ESL model has no notion of time, which entails that the modeling of starvation is not inherently equal to the RTL. Because it is an untimed model, the y-axis of the plot is not delay in time, rather it is the amount of wait functions called. \par
+The bus matrix differentiate between read, write and error without interrupting, or otherwise delaying the completion of the transaction. The bus matrix does differentiate between in and out of range transfers, in a similar manner to the RTL model, provided that the wait function is called with a non-zero wait time. 
+The plot shows how a global wait time of zero incur a non-linear relationship between the amount of wait functions and starvation for out of range transfers.
+
+\begin{tikzpicture}
+\begin{axis}[
+    title={Master grant delay},
+    xlabel={Master granted},
+    ylabel={Wait functions called by master},
+    xmin=1, xmax=15,
+    ymin=0, ymax=14,
+    xtick={1,2,3,4,5,6,7,8,9,10,11,12,13,14,15},
+    ytick={0,2,4,6,8,10,12,14},
+    legend pos=north west,
+    ymajorgrids=true,
+    grid style=dashed,
+]
+
+\addplot[ 
+  color=black,
+    mark=circle,
+    ]
+    coordinates {
+    (1,0)(2,0)(3,0)(4,2)(5,2)(6,4)(7,4)(8,6)(9,6)(10,8)(11,8)(12,10)(13,10)(14,12)(15,12)
+
+    };
+    \addlegendentry{Out of range 0ps}
+
+\addplot[
+   color=green,
+    mark=square,
+    ]
+    coordinates {
+    (1,0)(2,0)(3,0)(4,2)(5,3)(6,4)(7,5)(8,6)(9,7)(10,8)(11,9)(12,10)(13,11)(14,12)(15,13)
+
+    };
+    \addlegendentry{In range 0ps/1ps}
+
+\addplot[
+   color=red,
+    mark=square,
+    ]
+    coordinates {
+    (1,0)(2,0)(3,0)(4,1)(5,2)(6,3)(7,4)(8,5)(9,6)(10,7)(11,8)(12,9)(13,10)(14,11)(15,12)
+
+    };
+    \addlegendentry{Out of range 1ps}
+
+
+
+\end{axis}
+\end{tikzpicture}
+
+It is feasible to implement a monitor which keeps track of transactions and notifies if a master is granted the bus when it should starve and vice versa. It keeps track of transfer direction, success and context switching. How the monitor can accurately calculate when each master will starve, without using cycle accurate timing is not know and beyond the scope of this work. It is, however, possible to use this data to design a monitor which under-approximates when a master is granted the bus. If the simulation does not indicate that any masters connected to the system starves forever, the system is safe to implement at the RTL. If the over-approximation indicates that a master will starve, an alternative arbitration scheme should be considered. 
+
 
 
 \section{Experimental Results}
-Comparisons are made between the RTL model and its PPA representation, to determine the efficacy of the abstraction. Table \ref{tab:stats} compare the resource demand of the different models with respect to configuration size. The variables lister in the PPA section are variables available in the abstract model and does not count intermediate variables used in the ESL model. One additional input and visible register are added to the property set during the refinement process, which are are also not listed in the table. The listings for the bus matrix are the sum of all three rows.
+Comparisons are made between the RTL model and its PPA representation, to determine the efficacy of the abstraction. Table \ref{tab:stats} compare the resource demand of the different models with respect to configuration size. The variables listed in the PPA section are variables available in the abstract model and does not count intermediate variables used in the ESL model. One additional input and visible register are added to the property set during the refinement process, which are also not listed in the table. The listings for the bus matrix are the sum of all three rows.
 
 \begin{table}[hbt] 
   \begin{tabular}{ l r r r r r}
@@ -202,7 +325,7 @@ Comparisons are made between the RTL model and its PPA representation, to determ
 \end{table}
 
 The simulation models introduced in Sec.~\ref{sec:sim} were run on a range of configurations. The efficiency of simulating at the ESL compared to the RTL is clear. The simulations ran for a total of $10^6$ transactions, independent of configuration size, where the ESL simulation time was 7-8 seconds in all cases, with the variation occurring for different runs on the same configuration. The RTL simulation times are shown in the figure below. All simulations were run on the same computer on the same day. The ESL models were built and run with cmake3, whereas the RTL models were built and run with Modelsim SE-64 10.7c. All RTL simulations were run without displaying signals as waveforms. \\
-\WKSAY{These simulations are run locally at uni because frascati was to variable and kept disconnecting. What is interesting is that while ESL simulation ran at 6-7 seconds, the RTL simulations ran much slower than shown here, with almost a minute in difference in some cases}
+\WKSAY{These simulations are run locally at uni because frascati was to variable and kept disconnecting. What is interesting is that on frascati, the ESL simulations are faster (6-7s) and RTL simulations are slower, with almost a minute in difference in some cases}
 
 \begin{tikzpicture}
 \begin{axis}[
@@ -275,8 +398,7 @@ The simulation models introduced in Sec.~\ref{sec:sim} were run on a range of co
 \end{axis}
 \end{tikzpicture}
 
-The simulation time of configurations with one and two masters are offset due to the delay between transfers. The simulations are therefore not slower for configurations with one and two masters, they merely need more cycles to complete the $10^6$ transfers
-This latency is induced by the blocking interface between the agent and master, with the payload response for write transactions added on top. \par
+The simulation time of configurations with one and two masters are offset due to the delay between transfers. It is not the simulation itself that is less efficient, it is the system that require more cycles to complete the transfers. This latency is induced by a lack of parallelism within the master agent. \par
 
 The amount of generated properties depend on amount of masters and slaves connected to the system. The figure below show the relationship between properties and configuration sizes. Vacuous properties are not counted. The proof time of each properties varies between 1-10 seconds for the small configurations up to 1-2 minutes for the largest.
 
