@@ -6,17 +6,16 @@ The masters and slaves which will be connected to the bus can not be required to
   
 
 \section{Generator Overview}
-\begin{wrapfigure}[23]{l}{4cm}
-\includegraphics[width=4cm]{figs/Generator.png}
+\begin{wrapfigure}[23]{l}{5cm}
+\includegraphics[width=5cm]{figs/Generator.png}
 \caption{Design flow with generator}\label{fig:dflow}
 \end{wrapfigure}  
 
-\TLSAY{More space around wrapfigure. You could also make it a regular figure and mirror it around the axis} 
+The generator takes two input arguments, number of masters and number of slaves. Corresponding models of the bus architecture are generated at the RTL and ESL.
+After the models are generated, the generator calls the software tool DeSCAM with the SystemC-PPAs of the of the ESL model as input argument. \par The model is analyzed by the tool and creates and abstract model and property suite. A dedicated plugin uses the abstract model and property suite to create refined property sets and completeness descriptions. The generated models and property files are available in the output folder of the generator. \par A designer can integrate the top-level ESL module of the bus to the system and run simulations. Adding or removing a master or slave require little effort, only a re-run of the generator and a re-integration of the bus into the system. When the system fulfills the requirements, the Property Driven Design flow is followed on the system modules. The developed RTL system modules can be connected to the generated bus without further testing required. The designer can run the property checker Onespin and verify that the bus ESL is a sound abstraction of the bus RTL by running two provided scripts. \par
+\vspace{2.0cm} 
 
-The generator takes two input arguments, number of masters and number of slaves. If the input arguments are within the range of 1-15, an ESL and RTL model are generated. \TLSAY{Valid input arguments should not be discussed in the beginning}. After the models are generated, the generator calls the software tool DeSCAM with the SystemC-PPAs of the of the ESL model as input arguments. \par The model is analyzed by the tool and creates and abstract model and property suite. A dedicated plugin uses the abstract model and property suite to create refined property sets and completeness descriptions. The generated models and property files are available in the output folder of the generator. \par A designer can integrate the top-level ESL module of the bus to the system and run simulations. Adding or removing a master or slave require little effort, only a re-run of the generator and a re-integration of the bus into the system. When the system fulfills the requirements, the Property Driven Design flow is followed on the system modules. The developed RTL system modules can be connected to the generated bus without further testing required. The designer can run the property checker Onespin and verify that the bus RTL is a sound abstraction of the bus ESL with a command from the terminal. \par 
-\TLSAY{What command are you talking about? That's confusing} 
-
-The following sections describe the bus architecture at the RTL and ESL. chapter.~\ref{ch:design} describes how to recreate the process of developing an abstract ESL model from the RTL, how to generate the system and automatically refine properties.  
+The following sections describe the bus architecture at the RTL and ESL. Chapter.~\ref{ch:design} describes how to recreate the process of developing an abstract ESL model from the RTL, how to generate the system and automatically refine properties.  
 \newpage
 
 \section{Register Transfer Level}
@@ -54,6 +53,7 @@ The master agent controls the transfer using \textbf{HBUSREQx} and \textbf{HTRAN
 
 \newpage
 \subsection{Slave agent}
+\label{sub:sagent}
 \begin{wrapfigure}[12]{l}{5.5cm}
 \includegraphics[width=5.5cm]{figs/hw/sAgent_FSM.png}
 \caption{Slave agent FSM}\label{fig:rsfsm}
@@ -211,9 +211,8 @@ After the response is written back to the master agents the same process of upda
 
 The port emulation is a helper module which is intended to represent the behavior of a non-existent SystemC-PPA port, no properties are generated from this module. It is required to adequately reflect the pipelined behavior of the bus, while simultaneously having a set of properties from the bus matrix which can hold on the design. Fig.~\ref{fig:em-port} a) is a simplified illustration of the port with one master agent connected. All master agents are in fact connected to the same port. \par
 The port forwards request from the highest priority master agent to the bus matrix. It unblocks the requesting master with highest priority, and any masters blocked in the address and data phase. All interactions with the master agents are done uninterrupted, in other words no wait statements are called during the process. \par
-This port models the signals which control the flow of transfer which were briefly discussed in Sec.~\ref{sub:magt-rtl}. Namely it compresses the functionality of the $agent\leftrightarrow matrix$ interfaces which cover the signals \textbf{HBUSREQx}, \textbf{HREADY} and \textbf{HGRANTx}, so that a single blocking interface covering all agents is available to the bus matrix.
-
-\TLSAY{I like it here. I'd expect that you explain why you think that the model is still sound.} 
+This port models the signals which control the flow of transfer which were briefly discussed in Sec.~\ref{sub:magt-rtl}. Namely it compresses the functionality of the $agent\leftrightarrow matrix$ interfaces which cover the signals \textbf{HBUSREQx}, \textbf{HREADY} and \textbf{HGRANTx}, so that a single blocking interface covering all agents is available to the bus matrix. \par
+Both the master agent and bus matrix is proven to follow the AHB protocol with the properties generated from their ESL descriptions. It is proven that the fixed-priority arbitration modeled in the bus matrix is a sound abstraction of the arbitration scheme used in the RTL. The arbitration scheme in the emulated port is carefully designed to exactly mirror the arbitration modeled in the bus matrix. The system is extensively simulated at the ESL and RTL to ensure that the behavior matches. Because no mismatch is indicated by neither the property checker, assertions in simulation nor simulation waveforms, the ESL is a sound abstraction of the RTL despite not formally proving the port emulation.  
 
 
 

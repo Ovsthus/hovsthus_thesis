@@ -38,24 +38,32 @@
   breakatwhitespace=false,      
   breaklines=true,                
   captionpos=b,                    
-  commentstyle=\color{mygreen}, 
+  commentstyle=\color{DARKGREEN}, 
   extendedchars=true,              
   frame=single,                   
   keepspaces=true,             
   keywordstyle=\color{blue},      
   language=c++,                 
-  numbers=none,                
+  numbers=left,                
   numbersep=5pt,                   
   numberstyle=\tiny\color{blue}, 
   rulecolor=\color{mygray},        
   showspaces=false,               
   showtabs=false,                 
-  stepnumber=5,                  
+  stepnumber=1,                  
   stringstyle=\color{mymauve},    
   tabsize=3,                      
   title=\lstname                
 }}
 {}
+
+\lstdefinelanguage{VHDL}{
+   morekeywords={
+     library,use,all,entity,is,port,in,out,architecture,of,
+     begin
+   },
+   morecomment=[l]--
+}
 
 \lstnewenvironment{VHI}{
 \lstset{
@@ -64,24 +72,25 @@
   columns=fullflexible,
   breakatwhitespace=false,      
   breaklines=true,                
-  captionpos=b,                    
-  commentstyle=\color{mygreen}, 
-  extendedchars=true,              
+  captionpos=b,    
+language=VHDL,                 
+  commentstyle=\color{DARKGREEN}, 
+  extendedchars=true,          
   frame=single,                   
   keepspaces=true,
-  keywords=[2]{or, and, "000", "001", resize, (, ), :, ;},
-  keywords=[3]{macro, end, if, elsif, true, is, property, at, t, t_end, false, reset_sequence, assume, prove, freeze },  
-  keywords=[4]{boolean, unsigned},           
+  keywords=[2]{or, and, "001", resize, (, ), :, ;},
+  keywords=[3]{macro,next, end,else, if, elsif, true, then, is, property, at, t, t_end, false, reset_sequence, assume, prove, freeze, during,[,],t+1,t+2},  
+  keywords=[4]{boolean, unsigned, type},           
   keywordstyle=[2]\color{mymauve}, 
   keywordstyle=[3]\color{blue},
   keywordstyle=[4]\color{mygreen},                      
-  numbers=none,                
+  numbers=left,               
   numbersep=5pt,                   
   numberstyle=\tiny\color{blue}, 
   rulecolor=\color{mygray},        
   showspaces=false,               
   showtabs=false,                 
-  stepnumber=5,                  
+  stepnumber=1,                  
   stringstyle=\color{mymauve},    
   tabsize=3,                      
   title=\lstname                
