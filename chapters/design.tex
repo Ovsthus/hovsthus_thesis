@@ -141,6 +141,7 @@ bus_to_mAgent(x)->set(to_mAgent(x));
  
 
 \subsection{Master Agent}
+\label{sub:magent-design}
 The SystemC-PPA module of the master agent needs to cover all signals of the master agent interface. Some of these signals are represented in the event handling of the blocking ports. The control flow of a bus request and accompanying signals (\textit{hbusreq, hgrant, hready}) are modeled with a single blocking write as seen from line 3 below. 
 \begin{C++}
 if(state == request){
@@ -668,8 +669,76 @@ The amount of generated properties depend on amount of masters and slaves connec
 \end{axis}
 \end{tikzpicture}
 
-
-
-
 \section{Concept: Burst Transfers}
 \label{sec:burst}
+This section covers a demonstration of how a four beat incremental burst is implemented with SystemC-PPA and how the properties are refined to hold on the design. It is also discussed how the remaining burst transfer types can be implemented and the limitations. \par
+In this demonstration, a system with one master and one slave is used. The system is constrained to stay within the slave address range so that the address does not increment across the slave boundary or activates the default slave response. 
+
+\subsection{Extensions to the RTL}
+The master and slave agents are extended to support a four beat incremental burst transfer. It is not implemented support for early burst termination. Early burst termination is not applicable in a single master system, but is disabled regardless by selecting "fair" fixed-priority arbitration.  
+ 
+\subsubsection{Master Agent}
+\begin{wrapfigure}[11]{l}{6cm}
+\includegraphics[width=5cm]{figs/hw/mAgent_burstfsm.png}
+\caption{FSM with burst}\label{fig:magt-burstfsm}
+\end{wrapfigure} 
+
+An extra state \textit{addr\_data} is added to the state machine which carry out the concurrent clocking in/out of address and data. Data is clocked in or out with separate shiftregisters. Address is incremented by adding the address increment to the \textbf{HADDR} output. In this demonstration, a fixed data size of 32 bits is used. Two register banks are added as input and output between the agent and its master. Both register banks consist of four 32-bit registers which store the write and read burst data payloads. 
+
+\subsubsection{Slave Agent}
+\begin{figure}[hbt]
+ \centering
+ \begin{subfigure}[b]{0.4\linewidth}
+ \includegraphics[width=0.7\linewidth]{figs/hw/sAgent_wburstfsm.png}
+ \caption{Slave agent burst write}
+ \end{subfigure}
+ \begin{subfigure}[b]{0.4\linewidth}
+ \includegraphics[width=0.7\linewidth]{figs/hw/sAgent_rburstfsm.png}
+ \caption{Slave agent burst read}
+ \end{subfigure}
+\label{fig:sagt-burstfsm}
+\end{figure}
+
+The slave agent state machine is more complicated. For this reason single transfers are removed from Fig.~\ref{fig:sagt-burstfsm} and the burst write and read are shown in to separate figures for visibility. Register banks are added as inputs and outputs between the agent and its slave, including a register bank for the burst addresses. 
+\begin{itemize}
+ \item Burst write: Address and data are clocked in and written to the register banks. In the final beat of the burst, the slave agent samples the last data but still drives \textbf{HREADY} low to extend the transfer until it receives a response from the slave. The agent completes the transfer by driving \textbf{HREADY} high when response is received in the same manner as with single transfers.
+ \item Burst read: The slave agent samples the first address and immediatly drives \textbf{HREADY} low to extend the transfer until it has received burst data from the slave. The slave must then calculate the remaining addresses internally using the control signals. When the agent receives the burst data payload, it drives \textbf{HREADY} high to clock the data out, and the remaining addresses in. This renders the address register bank redundant in the RTL module, but it is useful in property refinement.  
+\end{itemize}
+
+\subsection{Extensions to the ESL}
+\begin{figure}[hbt]
+    \begin{center}
+        \includegraphics[width=0.8\textwidth]{figs/ESL/burst_esl.png}
+    \end{center}
+    \caption{ESL with burst added}
+    \label{fig:esl-burst}
+\end{figure}
+
+The emulated port is not strictly necessary in a single master system, however, it remains in the demonstration to establish how bursts can be implemented for any configuration. In addition to the added ports shown in Fig.~\ref{fig:esl-burst}, some ports have extended their payload to account for burst transactions. One example of such a payload is shown in the following example. \par 
+This payload represents all the response data of a four beat burst and is transfered in one instance at the ESL. The signal macros are time shifted such that they represent the the data in each beat of the burst. 
+\begin{C++}
+struct slv_out_burst_t{
+    unsigned int hrdata0;
+    unsigned int hrdata1;
+    unsigned int hrdata2;
+    unsigned int hrdata3;
+    unsigned int hresp;
+};
+\end{C++}
+
+When implementing burst transfers in SystemC-PPA modules, the generated properties must be considered. Each port interface is represented differently in the property set. Recall that blocking ports are accompanied with "sync" and "notify" signals, where no payload signals are determined in the properties unless the accompanying notify signal is set. This is practical in the macro refinement, since signals can be time-shifted without this causing issues for properties which are not concerned with the port in question. Some of the payloads are used for both single and burst transfers, so conditions must be added to the signal macros to eliminate the irrelevant signals. This elimination is accounted for at the ESL by assigning default or zero values to the irrelevant signals.  
+     
+
+\subsubsection{Master Agent}
+\begin{wrapfigure}[11]{l}{6cm}
+\includegraphics[width=5cm]{figs/ESL/mAgent_burstesl.png}
+\caption{FSM with burst}\label{fig:magt-burstesl}
+\end{wrapfigure} 
+
+No extra states are added to the master agent at the ESL.
+
+
+
+
+
+
