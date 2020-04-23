@@ -217,6 +217,8 @@ blocking_out_sig : type := refinement end macro;       --payload
 
 
 Before covering the individual clusters property refinement, the emulated port interfaces will be explained collectively. \par
+\TLSAY{Why would you not first explain the regular clusters and then talk about the complicated emulated port stuff?} 
+
 The emulated port interfaces exclusively use the sync and notify to convey information. Some of these do not exist in the RTL design, so they are given abstract values to satisfy the properties. Following is a pseudo refinement of the existing signals.
 \begin{VHI}
 --master agent
@@ -241,6 +243,8 @@ assume:
  at t: not(update_request_sync);
  at t: request  = true;
 \end{VHI}
+
+\TLSAY{Where are these two lines of code coming from? You need to put the entire piece of code in it and give it a subtitle. Also in the previous Section you did this see xyz in the two lines below thing. Please find my comment in the previous review on how to deal with code examples.} 
 
 \subsection{Bus Matrix}
 All I/O signals of the bus matrix are refined to represent their similarly named top level RTL signal. There are, however, some signals that need some added logic. These are all signals which are represented at the ESL using enum values and signals which are not assigned values on a clock edge in the RTL. \par
@@ -358,6 +362,8 @@ for(auto dp: ps->getDpSignals)
 
 Some signals require more elaborate refinements, as is covered in Sec.~\ref{sec:refine}. These signals are checked for with if-else statements and refined accordingly when found. \par
 The required assertions and macro functions are added for the appropriate number of masters. The macros for data bus ownership and default master state are subsequently added. The visible registers do not share signal names with the RTL design, so every one is checked for by name and refined accordingly. \par
+
+\TLSAY{This reads like a list. Why not having it as a list?} 
 The states are given recognizable names and numbering in the ESL model, which are transferred to the abstract model but with added numbering. The plugin iterates over the state map and refines the state macro according to name. If the state contains important numbering, this number is fetched with a function that excludes the numbering added by the tool. \par
 Each operation property is generated using functions which are slightly modified versions of functions from the plugin \textit{PrintITL} from \cite{descam}. Mainly, it modifies the time-points in the properties which require two cycles to complete by checking the assumptions and commitments. The generator excludes vacuous properties from generation. This is accomplished by checking for conflicts in the assumption part of each property. Some of these conflicts lead to conflicts in the completeness check, so they must be removed. The number of vacuous and non-vacuous properties are displayed on the terminal. 
 \par
@@ -372,16 +378,18 @@ The master agent is refined to hold on master agent zero in a similar, but simpl
 \label{sec:sim}
 Corresponding simulation models are generated for the RTL and ESL model. The simulation models offer a second layer of verification that the operations are carried out as intended and that the architecture behave equally at both levels. \par
 Master and slave dummies which carry out simple read and write operations are connected to the top-level design. The slave dummy has no knowledge of its address offset, or which master is operating it. Similarly, the master can not distinguish if the slave it intended to access is the slave which is responding. VHDL does not offer the same high level capabilities as C++, but the simulation models should operate on equal principles. This is accomplished by adding an identification number as input to the slave dummies in the RTL model and global functions to encode and decode identification numbers in both models. 
+\TLSAY{Now there are dummies. another picture would be nice. It's confusing.} 
+
 \begin{itemize}
  \item \textit{Write}: The master dummy calls a function from the included \textit{globals.h/.vhdl}, which takes target address as input argument and returns an ID number. The master adds this ID number to the top eight bits of its payload data. The slave dummy asserts that the top eight bits of the received data matches its own ID number. The ESL slave dummy must translate its object name to the corresponding ID number with a function available in the same included file. 
  \item \textit{Read}: The slave dummy adds its ID number to the top eight bits of its response data. The master dummy uses a function to assert that the response ID matches its target address ID.   
 \end{itemize}  
 
-It is highly unlikely that errors in the global functions correspond to errors in the design, or in other words masks them. The simulations are run for $10^6$ transfers, which are counted within the slave dummies, out of range transfers are therefore not counted and affects simulation time.  
+It is highly unlikely that errors in the global functions correspond to errors in the design, or in other words masks them. \TLSAY{Can it happen or can it not happen? If it can happen, explain what kind of errors are missed. If it can't happen remove it} The simulations are run for $10^6$ transfers, which are counted within the slave dummies, out of range transfers are therefore not counted and affects simulation time.  
 
 \subsection{Starvation}
-One drawback of fixed-priority arbitration is that lower priority masters may never be granted access to the bus. When this occurs depend on the amount of masters, the rate of transfer for each master and the duration of each transfer. The plot below show when the masters are granted access to the bus, based on the duration and transfer rate in the RTL model. The different transfer durations are separated for each run to get comprehensive results and the slave dummies respond without delay. The plot shows a clear separation and linear relationship between the different transfer conditions and rates. 
-
+One drawback of fixed-priority arbitration is that lower priority masters may never be granted access to the bus. When this occurs depend on the amount of masters, the rate of transfer for each master and the duration of each transfer. The plot below show\TLINS{s} when the masters are granted access to the bus, based on the duration and transfer rate in the RTL model. The different transfer durations are separated for each run to get comprehensive results and the slave dummies respond without delay. The plot shows a clear separation and linear relationship between the different transfer conditions and rates. 
+\TLSAY{This section is very confusing. Did you explain it somewhere? Why is read succsess/write fail intermixed? Is this an RTL or ESL simulation. If it is an ESL simulation why is there a clock delay? If this is an RTL simulation where is the ESL counterpart ? Professors will jump on this, because your fiddeling with the asynchronous model here. Make it crisp} 
 \begin{tikzpicture}
 \begin{axis}[
     title={Master grant delay},
@@ -436,6 +444,12 @@ One drawback of fixed-priority arbitration is that lower priority masters may ne
 
 \end{axis}
 \end{tikzpicture}
+
+
+\TLSAY{Here comes the ESL model ... okay ... this section needs more structure. Why don't start at the ESL and go down? ... I think you should explain the setup better.  This 0ps and 1ps is also very confusing. Why don't you explain two modes? One using SC\_ZERO\_TIME the other one uses 1ps (Which models are random selection of the next operation) ... you should also explain what your setup looks like}
+
+\TLSAY{I had the impression that you explained to me that the wait of the dummies random ? So you would use mod WAITCOUNT ... in case of rnd() mod 5 the master may wait 0,1,2,3,5 steps? Here you claim that you're waiting exactly 1,2,3,4,5 } 
+
 
 
 The ESL model has no notion of time, which entails that the modeling of starvation is not inherently equal to the RTL. Because it is an untimed model, the y-axis of the plot below is not delay in time, rather it is the amount of wait functions called. \par
@@ -494,9 +508,13 @@ The plot shows how a global wait time of zero incur a non-linear relationship be
 It is feasible to implement a monitor which keeps track of transactions and notifies if a master is granted the bus when it should starve and vice versa. It keeps track of transfer direction, success and context switching. How the monitor can accurately calculate when each master will starve, without using cycle accurate timing is not know and beyond the scope of this work. It is, however, possible to use this data to design a monitor which under-approximates when a master is granted the bus. If the simulation does not indicate that any masters connected to the system starves forever, the system is safe to implement at the RTL. If the over-approximation indicates that a master will starve, an alternative configuration or arbitration scheme should be considered. 
 
 
+\TLSAY{You have it a little in your wrap up, but why is this simulation necessary? What kind of results do we expect to get. Why is is not 1:1 transferable. What does this mean for soundness? This section feels really rough.}  
+
 
 \section{Experimental Results}
-Comparisons are made between the RTL model and its PPA representation, to determine the efficacy of the abstraction. Table \ref{tab:stats} compare the resource demand of the different models with respect to configuration size. The variables listed in the PPA section are variables available in the abstract model and does not count intermediate variables used in the ESL model. One additional input and visible register are added to the property set during the refinement process, which are not listed in the table. The total resources for the bus matrix is the sum of the three bottom rows.
+
+\TLSAY{This section is not done yet right? Where are the result for ESL simualtion. Where is the comparsion ESL/RTL? Where is you discussion of the results} 
+Comparisons are made between the RTL model and its PPA representation, to determine the effica\TLINS{n}cy of the abstraction. Table \ref{tab:stats} compare the resource demand of the different models with respect to configuration size. The variables listed in the PPA section are variables available in the abstract model and does not count intermediate variables used in the ESL model. One additional input and visible register are added to the property set during the refinement process, which are not listed in the table. The total resources for the bus matrix is the sum of the three bottom rows.
 
 \begin{table}[hbt] 
   \begin{tabular}{ l r r r r r}
