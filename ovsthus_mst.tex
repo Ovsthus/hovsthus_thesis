@@ -30,6 +30,7 @@
 \colorlet{mygreen}{green!60!blue}
 \colorlet{mymauve}{red!60!blue}
 
+
 \lstnewenvironment{C++}{
 \lstset{
   backgroundcolor=\color{gray!10},  
@@ -37,11 +38,13 @@
   columns=fullflexible,
   breakatwhitespace=false,      
   breaklines=true,                
-  captionpos=b,                    
+  captionpos=b,
+  belowskip=-2.5em,                    
   commentstyle=\color{DARKGREEN}, 
   extendedchars=true,              
   frame=single,                   
-  keepspaces=true,             
+  keepspaces=true,
+  showstringspaces=false,             
   keywordstyle=\color{blue},      
   language=c++,                 
   numbers=left,                
@@ -72,11 +75,13 @@
   columns=fullflexible,
   breakatwhitespace=false,      
   breaklines=true,                
-  captionpos=b,    
-language=VHDL,                 
+  captionpos=b,
+  belowskip=-2.5em,    
+  language=VHDL,                 
   commentstyle=\color{DARKGREEN}, 
   extendedchars=true,          
-  frame=single,                   
+  frame=single,
+  showstringspaces=false,                   
   keepspaces=true,
   keywords=[2]{or, and, "001", resize, (, ), :, ;},
   keywords=[3]{macro,next, end,else, if, elsif, true, then, is, property, at, t, t_end, false, reset_sequence, assume, prove, freeze, during,[,],t+1,t+2},  
