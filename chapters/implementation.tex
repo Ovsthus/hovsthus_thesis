@@ -1,8 +1,8 @@
 \label{ch:impl}
-This chapter presents the proposed implementation of the AHB generator. The AHB generator is a C++ program which generates the AHB architecture for a selected number of masters and slaves. Models of the bus architecture are generated at the Electronic System Level and the Register Transfer Level. The two ESL modules are compliant with SystemC-PPA. They are used with the software tool DeSCAM to generate a complete property set which represents the full I/O behavior of the ESL model. A plugin is designed for the software tool which automatically refines the property set, and generates a completeness description. The refined property set and completeness description are used with the property checker Onespin to prove that both ESL modules are sound abstractions of their RTL counterparts. An emulated port interface is implemented between the two modules, which is not proven formally. \par
+This chapter presents the proposed implementation of the AHB generator. The AHB generator is a C++ program which generates the AHB architecture for a selected number of masters and slaves. Models of the bus architecture are generated at the Electronic System Level and the Register Transfer Level. The two ESL modules are compliant with SystemC-PPA. They are used with the software tool DeSCAM to generate a complete property set which represents the full I/O behavior of the ESL model. A plugin is designed for the software tool which automatically refines the property set and generates a completeness description. The refined property set and completeness description are used with the property checker Onespin to prove that both ESL modules are sound abstractions of their RTL counterparts. An emulated port interface is implemented between the two modules, which is not proven formally. \par
 Developing an ESL model of a bus architecture which follows the AHB protocol comes with a number of challenges. The main challenge is developing an ESL model whose generated properties represent an RTL model which follows the AHB protocol. There are no tests that can be run on the ESL model to verify this. The top-down design approach would entail the refinement process going back and forth between the ESL and RTL, rather than $ESL\leftrightarrow PPA$ and $Properties\leftrightarrow RTL$. Instead, an existing bus architecture complying with the AHB protocol is used as a starting point to develop the ESL model. \par
-The goal is to represent the existing RTL model with a high level of abstraction. This involves modeling the communication across the bus at the transaction level. A high level of abstraction result in much higher simulation speed, but a requirement of simulation at the ESL is that it correctly reflects the transactions as they occur in the RTL model. One way to reach a high level of abstraction and secure correct simulation is using the \textit{blocking} interface introduced in Sec.~\ref{sub:ports}. \par
-The masters and slaves which will be connected to the bus can not be required to implement the protocol internally, this would defeat the entire purpose of the generator. The objective of the generator is to reduce the total design effort of a system. The burden of developing hardware which implements the protocol is not placed on the user of the generator. For this reason, so called "agents" are developed which communicate using the four phase handshake on one side, and the AHB protocol on the other. \par 
+The goal is to represent the existing RTL model with a high level of abstraction. This involves modeling the communication across the bus at the transaction level. A high level of abstraction results in much higher simulation speed, but a requirement of simulation at the ESL is that it correctly reflects the transactions as they occur in the RTL model. One way to reach a high level of abstraction and secure correct simulation is using the \textit{blocking} interface introduced in Sec.~\ref{sub:ports}. \par
+The masters and slaves which will be connected to the bus cannot be required to implement the protocol internally, this would defeat the entire purpose of the generator. The objective of the generator is to reduce the total design effort of a system. The burden of developing hardware which implements the protocol is not placed on the user of the generator. For this reason, so called "agents" are developed which communicate using the four-phase handshake on one side, and the AHB protocol on the other. \par 
   
 
 \section{Generator Overview}
@@ -33,12 +33,12 @@ The existing hardware is taken from the \textit{ahb\_system\_generator} found at
 \newpage
 \subsection{Master Agent}
 \label{sub:magt-rtl}
-\begin{wrapfigure}[11]{l}{6cm}
-\includegraphics[width=5.5cm]{figs/hw/mAgent_FSM.png}
+\begin{wrapfigure}[13]{l}{6.5cm}
+\includegraphics[width=6cm]{figs/hw/mAgent_FSM.png}
 \caption{Master agent FSM}\label{fig:rafsm}
 \end{wrapfigure}  
 
-The master agent implements the master side of the AHB protocol. It is initialized to the \textit{idle} state, where it awaits a payload. The $agent\leftrightarrow master$ interface implements the four phase handshake in both directions. In other words, it is blocked pending a synchronization signal from the master. The payload represents a subset of the AHB master interface, as the remaining signals are either hardwired to default values or modified throughout the transaction. The slave return payload contains a signal which report if the transfer was a success, and valid data if the transaction was a successful read request. An overview of a transfer is provided with respect to the FSM.
+The master agent implements the master side of the AHB protocol. It is initialized to the \textit{idle} state, where it awaits a payload. The $agent\leftrightarrow master$ interface implements the four-phase handshake in both directions. In other words, it is blocked pending a synchronization signal from the master. The payload represents a subset of the AHB master interface, as the remaining signals are either hardwired to default values or modified throughout the transaction. The slave return payload contains a signal which reports if the transfer was a success, and valid data if the transaction was a successful read request. An overview of a transfer is provided with respect to the FSM.
 \begin{enumerate}
  \item \textit{Idle}: Initial/idle state, when a synchronization signal is received, the payload is translated to bit and bit vector values and stored in registers.
  \item \textit{Request}: \textbf{HBUSREQx} signals the bus that the agent wants access. The signal remains asserted until the agent is granted access to the bus (\textbf{HGRANTx} is set) and the bus is ready (\textbf{HREADY} is set). When this applies, address and control registers are written to the bus. 
@@ -59,7 +59,7 @@ The master agent controls the transfer using \textbf{HBUSREQx} and \textbf{HTRAN
 \end{wrapfigure}  
 
 The slave agent implements the slave side of the protocol. The transition conditions in the FSM of Fig.~\ref{fig:rsfsm} are slightly simplified for readability. 
-The $agent\leftrightarrow slave$ interface implements a four phase handshake in both directions. Because of this, the slave agent is blocked in the middle of a transfer so it inserts wait states to extend the data phase of the transfer until it the slave has finished processing the request. The payload written to the slave from the agent is equivalent to the payload written from master to agent. An overview of a transaction is given with respect to the FSM.\par
+The $agent\leftrightarrow slave$ interface implements a four-phase handshake in both directions. Because of this, the slave agent is blocked in the middle of a transfer so it inserts wait-states to extend the data phase of the transfer until it the slave has finished processing the request. The payload written to the slave from the agent is equivalent to the payload written from master to agent. An overview of a transaction is given with respect to the FSM.\par
  \vspace{1cm} 
 
 \begin{enumerate}
@@ -67,7 +67,7 @@ The $agent\leftrightarrow slave$ interface implements a four phase handshake in 
  \item \textit{Data cycle}: If the transaction is a write request an additional cycle is required to sample the data according to protocol. The state advances unconditionally at the next clock edge.
  \item \textit{Slave\_out}: The slave agent signals the slave that the payload is valid by keeping its output notify set. The slave should be ready, but this is not a strict requirement. The slave agent remains in this state, and keeps its notify set until it receives a synchronization signal from the slave.    
  \item \textit{Slave\_in}: The slave agent keeps its input notify set and remains in this state until the request is processed. When the synchronization signal is received, the agent writes response data and transfer status to its bus output registers. 
- \item \textit{Error cycle}: If the transfer status is error, an additional cycle is inserted before returning to idle to provide a two cycle error response. 
+ \item \textit{Error cycle}: If the transfer status is error, an additional cycle is inserted before returning to idle to provide a two-cycle error response. 
 \end{enumerate}
 
 The return to idle completes the transfer. The slave agent drives \textbf{HREADY} high and clears the status and response data registers one clock cycle later. 
@@ -83,15 +83,15 @@ The return to idle completes the transfer. The slave agent drives \textbf{HREADY
     \label{fig:esl-top}
 \end{figure}
 
-The Electronic System Level models the RTL design described in the previous section. There are no slave agents in the ESL model, but an abstract representation of the master agents remain. Key transfer control signals are modeled with a port emulation module. The port emulation module enable the the generated properties from the bus matrix to hold on the design, while providing correct simulation behavior.  
+The Electronic System Level models the RTL design described in the previous section. There are no slave agents in the ESL model, but an abstract representation of the master agents remains. Key transfer control signals are modeled with a port emulation module. The port emulation module enables the generated properties from the bus matrix to hold on the design, while providing correct simulation behavior.  
 
 
 \subsection{Master agent}
-\begin{wrapfigure}[10]{l}{5.5cm}
-\includegraphics[width=5.5cm]{figs/ESL/mAgent_ESL.png}
+\begin{wrapfigure}[11]{l}{6.5cm}
+\includegraphics[width=6cm]{figs/ESL/mAgent_ESL.png}
 \caption{Master agent FSM}\label{fig:eafsm}
 \end{wrapfigure}
-The FSM of the master agent at the ESL is similar to its RTL counterpart. The control of the transfer flow is accomplished with using a \textit{blocking} interface in every state. The majority of the AHB master interface signals are represented with the \textit{shared} interface. Every I/O signal between the master agent and bus matrix that exist in the RTL model, are explicitly represented in the ESL model. An overview of the transfer is given with respect to the FSM. \\
+The FSM of the master agent at the ESL is similar to its RTL counterpart. The control of the transfer flow is accomplished by using a \textit{blocking} interface in every state. The majority of the AHB master interface signals are represented with the \textit{shared} interface. Every I/O signal between the master agent and bus matrix that exist in the RTL model, are explicitly represented in the ESL model. An overview of the transfer is given with respect to the FSM. \\
 \vspace{0.5cm} 
 
 \begin{enumerate}
@@ -110,7 +110,7 @@ All the signals on the AHB interface which are hardwired are assigned those valu
 \includegraphics[width=5.5cm]{figs/ESL/Bus_fsm_new.png}
 \caption{Bus matrix FSM}\label{fig:busfsm}
 \end{wrapfigure}
-The bus matrix is described at the ESL with three explicit states. These three states represent the transfer phases only when the transitions $Address\rightarrow Data$ are followed. This is not always the case so it is useful to distinguish the difference between the phases of the transfer and the states of the bus. If the bus is in the state $Address$, there is only one transfer in question and it is in the address phase. If the bus is in the state $Data$, there is one master with its transfer in the data phase, but there may also be a master with its transfer in its address phase. For this reason the word \textit{state} can not be used interchangeably with \textit{phase}, as they could within the master agents.\par
+The bus matrix is described at the ESL with three explicit states. These three states represent the transfer phases only when the transitions $Address\rightarrow Data$ are followed. This is not always the case, so it is useful to distinguish the difference between the phases of the transfer and the states of the bus. If the bus is in the state $Address$, there is only one transfer in question and it is in the address phase. If the bus is in the state $Data$, there is one master with its transfer in the data phase, but there may also be a master with its transfer in its address phase. For this reason, the word \textit{state} cannot be used interchangeably with \textit{phase}, as they could within the master agents.\par
 Every I/O signals of the master agent interfaces are represented in the ESL model for all agents. The pipelined behavior of the bus is modeled with the emulated port introduced at the start of this section. A brief overview of the transfer flow is given with respect to the FSM, before each state is described in more detail \par
 
 \begin{enumerate}
@@ -129,7 +129,7 @@ requests_in->get(reqs);
 \caption{Emulated port interface}
 \end{figure}
 
-The process of selecting the appropriate master agent with the fixed priority arbitration scheme is illustrated in Fig.~\ref{fig:fixed-prio-example}. The individual components inside the if-else clause are in reality assigned the values as the output of constant functions. The fixed-priority is arbitration is modeled with an if-else clause within each constant function and assigns the payload of the chosen master agent. The ESL model also keeps track of which master owns the address bus. This process occur in every state, with the only difference being the state transitions. 
+The process of selecting the appropriate master agent with the fixed priority arbitration scheme is illustrated in Fig.~\ref{fig:fixed-prio-example}. The individual components inside the if-else clause are in reality assigned the values as the output of constant functions. The fixed-priority arbitration is modeled with an if-else clause within each constant function and assigns the payload of the chosen master agent. The ESL model also keeps track of which master owns the address bus. This process occurs in every state, with the only difference being the state transitions. 
 \newpage
 
 \begin{figure}[hbt]
@@ -176,7 +176,7 @@ data_own = addr_own;
 \caption{Store address bus values intermediately}
 \end{figure}
 
-\textit{AS\_regs} are subsequently available for storing the payload of a new requesting master agent. If there are none, the default masters interface is read and assigned. The state transitions unconditionally to \textit{Data}.
+\textit{AS\_regs} are subsequently available for storing the payload of a new requesting master agent. If there are none, the default master's interface is read and assigned. The state transitions unconditionally to \textit{Data}.
 \newpage
 \subsubsection{Data}
 The variable \textit{DS\_regs.haddr} is used to determine which slave the master agent intends to communicate with. \textit{DS\_regs.hwrite} indicates whether or not the transaction is a write. If the transaction is a write, the payload data of the data bus owner is fetched.
@@ -226,7 +226,7 @@ After the response is written back to the master agents, the same process of upd
 The port emulation is a helper module which is intended to represent the behavior of a non-existent SystemC-PPA port, no properties are generated from this module. It is required to adequately reflect the pipelined behavior of the bus, while simultaneously having a set of properties from the bus matrix which can hold on the design. Fig.~\ref{fig:em-port} a) is a simplified illustration of the port with one master agent connected. All master agents are in fact connected to the same port. \par
 The port forwards request from the highest priority master agent to the bus matrix. It unblocks the requesting master with highest priority, and any masters blocked in the address and data phase. All interactions with the master agents are done uninterrupted, in other words no wait statements are called during the process. \par
 This port models the signals which control the flow of transfer which were briefly discussed in Sec.~\ref{sub:magt-rtl}. Namely it compresses the functionality of the $agent\leftrightarrow matrix$ interfaces which cover the signals \textbf{HBUSREQx}, \textbf{HREADY} and \textbf{HGRANTx}, so that a single blocking interface covering all agents is available to the bus matrix. \par
-Both the master agent and bus matrix is proven to follow the AHB protocol with the properties generated from their ESL descriptions. It is proven that the fixed-priority arbitration modeled in the bus matrix is a sound abstraction of the arbitration scheme used in the RTL. The arbitration scheme in the emulated port is carefully designed to exactly mirror the arbitration modeled in the bus matrix. The system is extensively simulated at the ESL and RTL to ensure that the arbitration matches. Because no mismatch is indicated by neither the property checker, assertions in simulation nor simulation waveforms, the ESL is a sound abstraction of the RTL despite not formally proving the port emulation.  
+Both the master agent and bus matrix are proven to follow the AHB protocol with the properties generated from their ESL descriptions. It is proven that the fixed-priority arbitration modeled in the bus matrix is a sound abstraction of the arbitration scheme used in the RTL. The arbitration scheme in the emulated port is carefully designed to exactly mirror the arbitration modeled in the bus matrix. The system is extensively simulated at the ESL and RTL to ensure that the arbitration matches. Because no mismatch is indicated by neither the property checker, assertions in simulation nor simulation waveforms, the ESL is a sound abstraction of the RTL despite not formally proving the port emulation.  
 
 
 

@@ -29,6 +29,7 @@
 \colorlet{mygray}{black!30}
 \colorlet{mygreen}{green!60!blue}
 \colorlet{mymauve}{red!60!blue}
+\colorlet{myyellow}{yellow!50!black}
 
 
 \lstnewenvironment{C++}{
@@ -65,7 +66,8 @@
      library,use,all,entity,is,port,in,out,architecture,of,
      begin
    },
-   morecomment=[l]--
+   morecomment=[l]--,
+   morestring=*[d]{"}
 }
 
 \lstnewenvironment{VHI}{
@@ -83,7 +85,7 @@
   frame=single,
   showstringspaces=false,                   
   keepspaces=true,
-  keywords=[2]{or, and, "001", resize, (, ), :, ;},
+  keywords=[2]{or, and, resize,not,(, ), :, ;},
   keywords=[3]{macro,next, end,else, if, elsif, true, then, is, property, at, t, t_end, false, reset_sequence, assume, prove, freeze, during,[,],t+1,t+2},  
   keywords=[4]{boolean, unsigned, type},           
   keywordstyle=[2]\color{mymauve}, 
@@ -142,11 +144,13 @@
 \newcommand{\COMMENTSUPERVISOR}[1]{\textbf{\color{blue}[#1]}}
 
 % ITL stuff
+\newcommand{\ITLYW}[1]{{\color{myyellow} #1}}
 \newcommand{\ITLKW}[1]{{\color{blue} #1}}
 \newcommand{\ITLIW}[1]{{\color{mygreen} #1}}
 \newcommand{\ITLRW}[1]{{\color{mymauve} #1}}
 \newcommand{\ITLAS}[1]{\ITLKW{at t: }}
 \newcommand{\ITLCT}[1]{\ITLKW{at t+{}#1: }}
+
 \newcommand{\ITLOR}{\ITLKW{\textbar\,\textbar}}
 \newcommand{\ITLENDL}{\ITLKW{;}}
 \newcommand{\ITLPREV}{\ITLKW{prev}}
