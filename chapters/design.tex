@@ -5,7 +5,7 @@
 To gain an overview in how the ESL model can be formed, a complete set of properties is developed bottom-up with the format of generated properties in mind.
 When developing the property set for the AHB system, abstraction is a priority. The entire RTL model is therefore ideally verified in a single cluster. 
 It is on the other hand not feasible to represent this multi-master design without separating the master agents into their own clusters. The reason for this is 
-parallelism and the exponential growth in possible states it brings forth. Every master agent acts with independence between idle and request. This means that the properties must capture all possibilities of each input notify signals and requests in every property, which is not feasible already with two master agents.
+parallelism and the exponential growth in possible states it brings forth. Every master agent acts with independence between idle and request. This means that the properties must capture all possibilities of each input notify signals and requests in every property, which is not feasible already with two master agents. \\
 \begin{wrapfigure}[15]{l}{8cm}
 \includegraphics[width=8cm]{figs/Verif/Verif_block.png}
 \caption{Verification clusters}\label{fig:verif-clust}
@@ -93,7 +93,7 @@ requests_in->get(reqs);
 
 The functionality of the arbitration scheme is carried out in cooperation between the bus matrix and the emulated port. It is essential that the arbitration scheme is modeled equally in the two modules. \par
 Fixed-priority arbitration is the scheme chosen for this work, mainly due to its simplicity. It can be modeled with a simple if-else conditional statement that is easily transferable to the emulated port. The "else" clause starting at line 9 in Fig.~\ref{fig:arbitration-code} shows the control of the address bus falling back to the default master when no request is pending.
-\newpage 
+
 \begin{figure}[h!]
 \begin{C++}
 ...
@@ -273,7 +273,7 @@ else false
 end if;
 end macro;
 \end{VHI}
-\caption{function to determine \textbf{HGRANTx}}
+\caption{Function to determine \textbf{HGRANTx}}
 \end{figure}
 
 The visible registers are the address bus signals and ownership, which are mapped to the physical signals in the arbiter RTL module. The data bus ownership is required to determine some states, but it is removed from the property set through optimizations done by the tool DeSCAM. Macros for this register and the default master state are added in the refinement process. \par
@@ -298,7 +298,7 @@ The visible registers for the address bus and address bus ownership are listed a
 
 \subsection{Master Agent}
 The property set and completeness description is identical for all master agents, therefore it is only refined for one master. 
-All I/O signals except the emulated port interfaces are refined with their similarly named top-level RTL signal. In the master agent, \textit{hsize} is an output, so therefore determining the signal as seen in the previous section, an assertion is added to prove this correspondence. \par
+All I/O signals except the emulated port interfaces are refined with their similarly named top-level RTL signal. In the master agent, \textit{hsize} is an output, so the signal is therefore determined as seen for \textit{hsize} in the bus matrix, an assertion is added to prove this correspondence. \par
 The registers storing the requests are refined to mAgent0/(xx)\_reg. All states are refined to the corresponding state of the RTL design.\par
 The completeness description lists all inputs and outputs with the signal macros generated from the SystemC-PPA. The emulated port interfaces are sufficient to determine all signals used within the macros. The state of the agent is added as a determination requirement so that it can be used as an input to the matrix cluster. \par
 It is worth mentioning that in a single master system, the wait properties related to the states \textit{request} and \textit{address} have unreachable witnesses. The scenario where the master agent waits here never occurs. 
@@ -315,7 +315,7 @@ blocking_out_sig : type := refinement end macro;       --payload
 \caption{Blocking port macros}
 \end{figure}
 
-The emulated port interfaces exclusively use the sync and notify to convey information. Some of these do not exist in the RTL design, so they are given abstract values to satisfy the properties. Following is a pseudo refinement of the existing signals.
+The emulated port interfaces mostly use the sync and notify to convey information. Some of these do not exist in the RTL design, so they are given abstract values to satisfy the properties. Following is a pseudo refinement of the existing signals. 
 
 \begin{figure}[h!]
 \begin{VHI}
@@ -325,20 +325,20 @@ macro agent0_request_sync : boolean := hgrant0 and hready0 end macro;
 macro agent0_ready_sync : boolean := hready0 end macro;
 
 -- bus matrix
-macro update_requests_sync : boolean := 
- hbusreq0 or hbusreq1 
-end macro;
 macro update_requests_notify : boolean :=
  hready0 and hready1 or --example with two masters
  hready0 and hgrant0 or
  hready1 and hgrant1
 end macro;
+
+macro requests_in_sig_m0 : boolean := hbusreq0 end macro;
+macro requests_in_sig_m1 : boolean := hbusreq1 end macro;
 \end{VHI}
 \caption{Refinement of emulated port interfaces}
 \label{fig:em-port-refine}
 \end{figure}
 
-Fig.~\ref{fig:em-port-refine} shows how the connections between the top-level signals are represented on each side of the port. The output in line 2 corresponds with parts of the input in line 8. The output signals from line 11 and 12 correspond to the input signals in line 3 and 4. As long as the logic described in the macros of line 7 and 10 is guaranteed within the emulated port it should not leave a gap in verification. However, this representation is not sufficient to use in the completeness description to determine \textbf{HBUSREQx} as input, or \textbf{HGRANTx} as output. The macros generated from the shared interfaces are used in the completeness description for these two signals in addition. 
+Fig.~\ref{fig:em-port-refine} shows how the connections between the top-level signals are represented on each side of the port. The signal in line 2 corresponds with the signal in line 13. The signals from line 8-10 correspond to the signals of lines 3 and 4. As long as the logic described in the macro of line 7-11 is guaranteed within the emulated port it should not leave a gap in verification. However, this representation is not sufficient to use in the completeness description to determine \textbf{HGRANTx} as output. The macros generated from the shared ports are used in the completeness description for these signals in addition. 
   
 
 \section{RTL}
@@ -357,7 +357,7 @@ The slave agent includes the same packages as the top-level, except for the comp
 \end{wrapfigure} 
 
 The slave agent is implemented as a state machine where combinational logic decides the next state based on internal registers and inputs. The state transitions are covered in Sec.~\ref{sub:sagent} and will not be reiterated here. What is covered is how the output assignments are handled so that properties can be generated from an ESL description which can be refined to hold on the design. These outputs are the request and response payload signals. \par
-The request payload is stored in output registers after they are sampled in the address phase. When the signals are stored, the address offset is subtracted from \textbf{HADDR} and \textbf{HWDATA} is zeroed. If it is a write transaction, \textbf{HWDATA} is overwritten with the data bus value on the following cycle. \par
+The request payload is stored in output registers after they are sampled in the address phase. When the signals are stored, the address offset is subtracted from \textbf{HADDR} and \textbf{HWDATA} is zeroed. If it is a write transaction, \textbf{HWDATA} is overwritten with the data bus value in the following cycle. \par
 The response payload is stored in response registers and a flag is set simultaneously. The slave agent waits for \textbf{HREADY} to be set and zeroes the response payload registers.  
 
 
@@ -770,6 +770,26 @@ The amount of properties generated depend exclusively on the number of slaves co
     \addlegendentry{1 master}
 
 \addplot[
+    color=black,
+    mark=square,
+    ]
+    coordinates {
+    (1,1)(5,7)(10,52)(15,162)
+
+    };
+    \addlegendentry{2 master}
+
+\addplot[
+    color=red,
+    mark=square,
+    ]
+    coordinates {
+    (1,1)(5,14)(10,96)(15,328)
+
+    };
+    \addlegendentry{3 master}
+
+\addplot[
     color=blue,
     mark=*,
     ]
@@ -1027,9 +1047,9 @@ end macro;
 
 \subsubsection{Further implementation and completeness}
 The remaining burst transfer types can be implemented using the same concept as described here. Separate conditions and signal assignment must be added to the ESL for each burst type. The burst payloads can be shared between the burst types, they are merely extended to account for the signals required to represent a 16-beat burst transaction. The signals which are irrelevant for transactions of fewer beats are eliminated as shown in this demonstration. To account for wrapping bursts and different data sizes, the address is incremented through a function. The duration of each transfer type must be known in advance, which places one limitation on the system. Incremental burst transfers of undefined length can therefore not be implemented. \par
-To prove completeness with burst transfers implemented, the remaining output signals must be determined throughout the burst transactions. This is feasible, but two aspects must be considered: 
+To prove completeness with burst transfers implemented, the remaining signals of the $agent\leftrightarrow bus$ interface must be determined throughout the burst transactions. This is feasible, but two aspects must be considered: 
 \begin{enumerate}
- \item Signals represented through notify events at the ESL: This includes \textbf{HBUSREQx} in the master agent, and \textbf{HREADY} in the bus matrix. Observe from line 18 in Fig.~\ref{fig:burst-property} how the request notify is required to stay false throughout the transfer. In the RTL model \textbf{HBUSREQx} remains asserted throughout the state \textit{addr\_data}. It must therefore be included in the burst payload and the request notify must be set to false throughout the burst transactions. The same applies to \textbf{HREADY} in the bus matrix.
+ \item Signals represented through notify events at the ESL: This includes \textbf{HBUSREQx} in the master agent, and \textbf{HREADY} in the bus matrix. Observe from line 18 in Fig.~\ref{fig:burst-property} how the request notify is required to stay false throughout the transfer. In the RTL model \textbf{HBUSREQx} remains asserted throughout the state \textit{addr\_data}. It must therefore be included in the burst payload and the request notify must be set to false throughout the burst transactions. The same applies to \textbf{HREADY} in the bus matrix, it must be added to the payload to be determined in every cycle.
  \item Payload signals during wait cycles: In Fig.~\ref{fig:error-and-elimination} it is shown two subsequent addresses. They are time-shifted such that there is a span of up to three time points where none of them are determined. This is due to the wait cycles inserted by the slave agent. These time points can be accounted for by adding duplicates of signals in the ESL model. This is a cumbersome process, so it is suggested to rather allow certain signals to be undetermined in the properties. The \textit{allow\_undetermined} operator can be used on signals which are known not to change during wait cycles. 
 \end{enumerate}
 

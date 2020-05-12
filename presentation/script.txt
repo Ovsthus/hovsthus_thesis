@@ -1,0 +1,318 @@
+INTRO:
+
+This is the presentation of my master thesis. 
+
+The subject concerns generating and verifying hardware with more than one level. 
+
+SLIDE 1, INTRODUCTION:
+
+-1 >> The idea is to generate ARMs advanced high performance bus architecture.
+      
+      It is generated at the electronic system level and register transfer level 
+      for a set number of masters and slaves. 
+
+      Properties are generated from the ESL model and automatically refined such 
+      that they hold on the RTL design.
+
+-2 >> The two main goals are that a high level of abstraction is achieved in the ESL
+      model. 
+
+      At the same time, the ESL must be a sound abstraction of the RTL.
+
+
+SLIDE 2, RTL OVERVIEW:
+
+-1 >> First, lets introduce the RTL model.
+
+      To reduce design time, in other words to avoid reinventing the wheel, a
+      trusted open source AHB architecture is used. It is implemented in VHDL,
+      it correctly follows the AHB protocol and it offers a range of arbitration schemes.
+
+-2 >> The architecture is interfaced with agents, which are designed from scratch.
+      They carry out the AHB protocol on one side, and offers a simple blocking interface
+      on the other. Now the burden of implementing the protocol does not fall on the user.
+      The slave agents insert wait states to extend the transfer until the slave has processed the request. 
+ 
+      The agents in the generator only support single transfers. Support for split and retry 
+      response types are not implemented. Burst transactions are only shown as a proof of concept and 
+      is covered at the end of this presentation.    
+
+SLIDE 3, ESL OVERVIEW:
+
+-1 >> The figure on the right is a top-level diagram of the ESL model for two masters and three slaves. 
+
+      Due to parallelism between the master agents, they are required to subside in their own SystemC-PPAs.
+      This lowers abstraction, but it is a necessary evil. There are a range of reasons why this is the case, the most
+      important one is state explosion. 
+
+      A blocking interface with the emulated port synchronizes the pipeline, whereas the remainder of the master 
+      interface is communicated over shared ports.
+
+-2 >> The bus architecture/interconnect is referred to as the bus matrix, at the ESL it includes the slave agents.
+
+      The bus interacts with the master agents in a pipeline. All three stages of this pipeline handles requests and
+      are therefore important states. The bus interacts with the slaves through blocking ports and receives a status
+      for all transfers. This status is communicated back to the masters regardless of transfer direction. This equalizes
+      the latencies for read and write transactions.
+
+SLIDE 4, PORT EMULATION:   
+
+-1 >> A port emulation is required in this implementation. Consider the figure on the right. 
+      The left state machine is part of the master agent FSM whereas the right is the complete FSM
+      of the bus matrix.
+
+-2 >> A number of masters can be requesting the bus. There can simultaenously be one master in each of the
+      two transfer phases. The requests as well as advancement through the phases for two master are all handled 
+      in a single time point, or on one clock edge.
+
+-3 >> Synchronizing the pipeline while maintaining a desirable level of abstraction is achieved through use of the
+      blocking interface. There is only one issue.
+
+-4 >> The generated properties only allow interaction with a single port per state/time point. The emulated port
+      enables a single port for use in the bus matrix, such that the generated properties can be refined to hold on the design.
+      As a trade-off, the emulated port can now not be verified for the same reason that it is implemented.     
+ 
+SLIDE 5, PORT SOUNDNESS:
+
+-1 >> So how is the ESL a sound abstraction of the RTL? 
+
+      A Fixed-priority arbitration scheme is chosen in this implementation. It is chosen for simplicity. 
+      The arbitration is formally verified in the bus matrix PPA. This arbitration is easily mirrored to 
+      the emulated port module since it is a simple if-else conditional statement, and priority is incremental from 0 and up.
+
+      The port receives a synchronization signal from the bus matrix.
+
+-2 >> It fetches the request from the highest priority master and unblocks it from the pipeline without
+      calling a wait function.    
+
+-3 >> It forwards the request to the bus matrix, and unblocks any master which is blocked in either transfer phase, again
+      without calling a wait.
+
+-4 >> This allows the bus matrix and either agent to advance the pipeline and transfer phases in synchrony, regardless of the choice
+      in model timing. It works for all configuration sizes, it is verified through simulation of both RTL and ESL. It is, however, 
+      only a temporary solution and will ideally be replaced with a formally verified alternative in the future.   
+
+SLIDE 6, COMPLETENESS:
+
+-1 >> Aside from the emulated port, the property sets prove completeness on the architecture modules. 
+      Completeness is proven in the master agent, all I/O signals are listed in the completeness description
+      and all properties and completeness checks hold. The properties are in no way constrained. The state
+      of the master agent is added as an output to its cluster.
+
+-2 >> This state, or simply the state of the default master is added as an input to the bus matrix cluster. 
+      There is no way of determining if a transfer is in progress or not, if it is the default master in its
+      data phase. Therefore this signal is used to determine the state of the bus matrix. 
+
+      Otherwise, as with the master agents, all I/O signals are listed in the completeness description, all properties 
+      and completeness checks hold without constraints.
+
+SLIDE 7, COMPLETENESS CONTINUED:
+
+-1 >> The signal macros representing the emulated port interface in the agent and matrix are handled with some care.
+      
+      The guide for verification of clusters advise to refine signal macros using the same top-level signals in both
+      clusters. 
+
+      Here the top level signals of request, grant and ready are used in the sync and notify in the agent.
+      The ready notify is an abstract signal and does not exist in the RTL, it is given abstract values to satisfy the properties. 
+
+-2 >> Similarily, the same top level signals request, ready and grant are used on the bus matrix side of the emulated port. 
+  
+      The notify at the bottom is however a combination of two signals for each master agent in the system. 
+      It is refined to represent the logic of these signals as they are used in the RTL. As long as this
+      behaviour is guaranteed within the port, it should not leave a gap in verification. 
+
+      This signal funcionally represents grant at the ESL, but it is not sufficient to satisfy the determination test.
+      grant is added to the shared interface as a purely symbolic signal at the ESL. 
+
+SLIDE 8, SIMULATION:
+
+-1 >> Simulation models are generated for both ESL and RTL
+      They are designed such that they perform operations and verify
+      functionality on equal principles.
+
+-2 >> Master and slave dummies are designed which perform simple read and write
+      operations. The slaves count number of transactions, when the number of 
+      transactions reaches 1 million, the simulation is ended. 
+
+-3 >> The slaves are given ID numbers. This ID is either encoded in the write data 
+      by the master and decoded by the slave, or encoded in the response data by the
+      slave and decoded by the master.   
+
+-4 >> The slave asserts that it is indeed the slave that the master intended to access. 
+      The master asserts that the response it receives originates from the slave that it accessed.
+      This checks that the payloads are sent and received between target and initiator as intended.
+
+SLIDE 9, SIMULATION TIME COMPARISON
+
+-1 >> Time comparisons of the simulation models truly highlight the efficiency of ESL simulation.
+      This graph shows simulation times of configurations with 1,2 and 3 masters at the RTL, and all configurations
+      of the ESL at the bottom. The x axis is amount of slaves in the configuration, and the y axis is time in seconds.
+
+      Be aware that the slowest simulation is actually configurations with a single master, and then configurations
+      with only two masters. This is due to the internal latency, or lack of parallelism within the master agents. 
+      It merely requires more clock cycles to complete the 1 million transfers compared to configurations with 3 or 
+      more masters. 
+
+      The ESL model is unaffected by this latency, or any change in configuration size.
+
+-2 >> now larger configurations are added to the graph, with 5, 10 and 15 masters, showing the effect of configuration size 
+      on simulation time.  
+      
+SLIDE 10, PROPERTIES AND PROOF TIMES
+
+-1 >> The amount of properties generated from the ESL model is relatively low for any configuration.
+      The graph on the left show the property graph for the bus matrix dependent on number of slaves.
+      The amount of properties are independent of amount of masters connected to the system. 
+      
+      This results in numerous vacuous properties or unreachable witnesses in configurations with 1 master, 
+      and some in configurations with 2. They remain in the configuration due to issues with the case split test 
+      when they are removed. This is also the case when the ESL model is modified such that the properties are never 
+      generated in the first place. This is likely due to the emulated port. They are vacuous or unreachable because
+      they cover a state of the pipeline which can not be fulfilled by anything less than three masters. 
+
+      The proof time of the property set is dependent on the amount of masters and slaves. 
+      In the graph on the right, a selection of configuration sizes are displayed. 
+      The times shown are the proof times for the property set run with a single core.
+      There are variations in the proof times of each property, but this is small enough that
+      the property check is highly parallelizable. 
+
+      The master agent is not graphically displayed as it only has 11 properties and takes
+      mere seconds to prove, regardless of configuration size.    
+
+SLIDE 11, STARVATION:
+
+-1 >> Fixed-priority arbitration was implemented to ensure soundness with respect to the emulated port. 
+      The downside of this arbitration is that it leaves masters vulnerable to starvation. 
+
+-2 >> Starvation is inherently a time, or rate dependant phenomenon. How is this reflected in an untimed model?
+      
+      Consider the figure on the right: If a master starves or not depends on its priority, it depends how fast higher priority
+      masters can or will request anew after returning from the data phase. And it depends on the length of the transfers occupying the bus
+      while higher priority masters are otherwise busy.
+
+-3 >> The simulation time affects the starvation, what takes a certain number of clock cycles at the RTL may take zero time at the ESL.
+      Context switches affect the rate, regardless of using zero or nonzero times. 
+
+-4 >> With systems of above three masters, the pipeline can be full while masters compete for a grant. There are cases where the fourth 
+      master starves forever because the first master has time to return from the data phase and request anew while the second and third master are still
+      occupying both transfer phases. 
+
+SLIDE 12, STARVATION COMPARISON
+
+-1 >> So is there a problem here?
+
+      Comparisons of the occurances of starvation has been carried out on every configuration on both levels. 
+      Delays between transfers are introduced to see which delay is required before each master is granted.  
+      The graphs on the left show the RTL model, the right shows the ESL model.
+
+      For transfers out of range, a fourth master does not starve in the RTL model, whereas the same is not true
+      for the ESL model. A wait statement can be inserted to compensate for this. 
+
+-2 >> The case is more complicated if zero wait time is used, and the waits are measured in amount of context switches.
+
+-3 >> As can be seen, the RTL model have great variation between the types of transfers and occurances of starvation.
+      This variation does not exist in the ESL model, therefore it is not safe to say that a configuration of four or
+       more masters is sound for a system of arbitrary complexity,
+       even when a wait statement is inserted as discussed for the out of range transfer.
+
+-4 >> Using random wait times merely show that the probability of a master receiving a grant is strictly reduced. This is provided
+      that zero and non-zero wait times are never intermixed.
+
+-5 >> What this indicates, is that it is feasible to implement a monitor, which over approximates when a master starves. What it accomplishes is
+      a guarantee that a given configuration is sound, otherwise the simulation is halted and the user is notified.
+
+      This is provided that two restrictions are imposed. One is that every context switch or simulation time increment which is counted in the monitor
+      can be attributed to an actual clock cycle in the RTL. The second is that there are restrictions on how many wait states a slave can insert, or that this is 
+      at least accounted for in the monitor.
+
+SLIDE 13, GENERATOR:
+
+-1 >> The system generator is comprised of two parts. The first part is the hardware generator. 
+      It generates corresponding architectures at the ESL and RTL.
+      The generator is a C++ program which takes number of masters and slaves as input arguments.
+      It reads the slave address ranges from a customizable file and generates the systems based
+      on this information.
+
+-2 >> The program calls a DeSCAM plugin that is dedicated to the AHB implementation.
+      The same plugin is called with either the master agent or bus matrix. 
+      It uses naming in the abstract model to identify signals, registers and states.
+      These macros are generated and refined accordingly.
+      The property set is printed and timepoints are modified by checking for certain assumptions and commitments.
+
+       A completeness description is created.   
+
+SLIDE 14, CONCEPT: BURST TRANSFERS:
+
+-1 >> Finally, the burst transactions are demonstrated as a proof of concept. 
+
+      The demonstration is a four beat incremental burst transfer, operated on a configuration
+      of a single master and slave. The address is constrained to stay within the address range
+      of the slave. The concept is applicable to all burst types except one, and any
+      configuration size.
+
+      The payloads of existing ports are extended to account for burst transactions. 
+      These payloads can be shared between all transfer types. The exceptions are shared
+      output ports, which is the majority of the interface between agent and bus. 
+      Shared out ports are not practical to model burst transactions.
+
+-2 >> For this reason extra ports are added to model the burst transfers on the 
+      master side of the interface. However, the burst write port is strictly 
+      symbolic, and only serves to determine signals in verification. 
+      Reading the burst write port signals the end of the data phase, 
+      so the payload does not reach its target. Therefore the data is transferred
+      through a helper payload over the request port at an earlier stage. 
+ 
+      
+SLIDE 15, BURSTS CONTINUED:
+
+-1 >> The payload include address, data and any control signal in need of determination.
+      One example of such a control signal is the htrans signal. It must be determined
+      in the master agent for every beat of the burst. The encodings are merely concatenated 
+      at the ESL, as seen in line 1. seq stands for sequential, nonseq stands for nonsequential, meaning start of transfer. 
+      In the property macros, time shifted values of htrans are concatenated. 
+
+      The data variable of line 2-3 show the example of sharing the payload. 
+      This is a four beat burst, so the hwdata4 is simply zeroed to signal that
+      it is an irrelevant variable. 
+      Similarly, in the macro refinement, conditional statements check the burst type
+      and apply the appropriate time shift for the signal, or in this case eliminates it
+      by assigning a zero. 
+
+SLIDE 16, BURSTS CONTINUED 2:
+
+-1 >> When bursts are added to the system, it is necessary that the property set proves completeness on the design. 
+      The main challenge with this is signal determination. 
+      Key signals of the interface between master agent and bus matrix on both sides must be determined throughout the beats
+      of the burst.
+      With exception of the ready signal, it is sufficient to determine them once for each beat of the burst. 
+      For this reason it is recommended to allow certain signals to be undetermined in time points where they dont change value.
+      This is to avoid cumbersome payloads filled with duplicate signals. 
+
+-2 >> The duration of each burst must always be known. Luckily, the wait states inserted to process the request in the slaves
+      are not part of the burst transaction. So no constraints are needed. 
+      However, this means that undefined incremental burst transfers must be excluded from the implementation. 
+
+      Finally, the default slave response is disabled in this demonstration. It is simply not known to the master agent whether or not
+      the transfer is in or out of range. For this reason the transfer is of undefined length unless the address is constrained. 
+      A solution to this is to check early for errors in the ESL, and simply abort the burst if there is an error. The only challenge is
+      that one must know that the error comes from the default slave. One solution to this is to always encode nonzero data in errors in slaves.
+
+SLIDE 17, WHAT REMAINS:
+
+-1 >> To conlcude this presentation, I would like to discuss what remains to generate a complete AHB system
+      at the ESL, which is a sound abstraction of the RTL.
+
+      An alternative to the emulated port is needed. This might be a dedicated port interface which is added to SystemC-PPA. 
+      Without this alternative, it is not safe to modify the interface, or implement any other arbitration scheme. 
+
+-2 >> If fixed-priority arbitration is used, a monitor is necessary to ensure that configurations of four or more masters are sound. 
+
+-3 >> Adding burst transactions to the generator, as discussed this excludes the incremental bursts of undefined length.
+
+-4 >> Adding split and retry response types. It is strictly not necessary to implement in the slaves, as they can be asserted as AHB lite
+      slaves. But support for these response types must be implemented in the masters to fully comply with the protocol.
+
+ 
+       
+
