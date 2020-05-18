@@ -439,7 +439,7 @@ The simulations are run for $10^6$ transfers, which are counted within the slave
 One drawback of fixed-priority arbitration is that lower priority masters may never be granted access to the bus. When this occurs depend on the amount of masters, the rate of transfer for each master and the duration of each transfer. \par
 Because starvation is inherently time-dependent some occurrences of starvation are not accurately captured in the untimed ESL simulation model. The rate of transfer depends not only on the rate of which a master writes to its agent, it also depends on whether the transfer is a write, read, successful or to the default slave. Furthermore, the delay within the masters and slaves play a part. \par
 If all masters write as rapid as possible within the slave range, it is all but the three highest priority masters which starve in both models. If this shifts to outside the slave range, it is all but the four highest priority master which starve at the RTL, but the ESL remains the same. A similar discrepancy occurs if a delay is added between transfers in the masters and the transfer direction switches between read and write. \par
-It is vital that an ESL simulation of a more elaborate system represent starvation adequately. The most important aspect of modeling starvation is that the ESL simulation does not show that a master can complete its task, when it actually starves forever in the RTL model. The two given examples indicate that the ESL simulation over approximates how many masters in the system are starving. If this is always true, the ESL model is sound when no masters are shown to starve during simulation. \par
+It is vital that an ESL simulation of a more elaborate system represent starvation adequately. The most important aspect of modeling starvation is that the ESL simulation does not show that a master can complete its task, when it actually starves forever in the RTL model. The two given examples indicate that the ESL simulation over approximates how many masters in the system are starving. If this is always true, the ESL model is sound with respect to starvation. \par
 Incrementing delays are temporarily inserted in the simulation models to provide some metrics for when starvation occurs. The masters are configured to wait for a certain time between each transfer, which is incremented after a certain number of transactions. When a master is granted access to the bus, it writes a message to the terminal which delay it required to receive a grant. The data for both models are shown graphically in Fig.~\ref{fig:starvation}. The ESL model is tested with different types of delays. The delays which are encountered in a real simulation model are wait statements called by port interfaces, which are either waiting for an event or for a certain time in picoseconds. Wait statements are also called when an important state is explicitly inserted. These wait statements cause a context switch and this thread is paused until the simulation has caught up with the time increment. \par
 With random delays, the results are equal as with fixed delay if the amount of transfers between increments is high enough. For the random wait examples, the SystemC-PPA ports wait between one and $y$ picoseconds, whereas the masters wait between one and $x$ picoseconds. To reduce variability, $x$ is incremented after $5*10^5$ transactions.      
 
@@ -537,7 +537,7 @@ With random delays, the results are equal as with fixed delay if the amount of t
     (1,0)(2,0)(3,0)(4,2)(5,3)(6,4)(7,5)(8,6)(9,7)(10,9)(11,11)(12,13)(13,14)(14,21)(15,22)
 
     };
-    \addlegendentry{single wait, in range, random, $y=4$}
+    \addlegendentry{in range, wait(rand()\%x +1), $y=4$}
 
 \addplot[
    color=blue,
@@ -547,7 +547,7 @@ With random delays, the results are equal as with fixed delay if the amount of t
     (1,0)(2,0)(3,0)(4,2)(5,3)(6,4)(7,5)(8,6)(9,7)(10,8)(11,9)(12,11)(13,12)(14,14)(15,16)
 
     };
-    \addlegendentry{single wait, in range, random, $y=2$}
+    \addlegendentry{in range, wait(rand()\%x +1), $y=2$}
 
 
 
@@ -559,7 +559,7 @@ With random delays, the results are equal as with fixed delay if the amount of t
     (1,0)(2,0)(3,0)(4,2)(5,3)(7,5)(8,6)(10,8)(12,10)(14,12)(15,13)
 
     };
-    \addlegendentry{single wait, in range, fixed}
+    \addlegendentry{in range, wait(x, SC\_PS)}
 
 
 \addplot[ 
@@ -570,7 +570,7 @@ With random delays, the results are equal as with fixed delay if the amount of t
     (1,0)(2,0)(3,0)(4,1)(5,3)(6,4)(7,5)(9,7)(11,9)(13,11)(15,13)
 
     };
-    \addlegendentry{single wait, out of range, fixed wait}
+    \addlegendentry{out of range, wait(x, SC\_PS)}
 
 \addplot[ 
   color=red,
@@ -580,7 +580,7 @@ With random delays, the results are equal as with fixed delay if the amount of t
     (1,0)(2,0)(3,0)(4,2)(5,2)(6,4)(7,4)(8,6)(9,6)(10,8)(11,8)(12,10)(13,10)(14,12)(15,12)
 
     };
-    \addlegendentry{context switch, out of range, SC\_ZERO\_TIME}
+    \addlegendentry{out of range, x$*$(0, SC\_PS)}
 
 
 \end{axis}
@@ -591,9 +591,13 @@ With random delays, the results are equal as with fixed delay if the amount of t
 \label{fig:starvation}
 \end{figure}
 
-Some measurements are not shown in the ESL portion of Fig.~\ref{fig:starvation} to keep the graph readable. The measurement for "context switch, in range  \textit{SC\_ZERO\_TIME}" and "context switch, in range, fixed"  are identical to the "single wait, in range, fixed" measurement. 
-Fig.~\ref{fig:starvation} shows that it is not safe to assume that the ESL model over approximates how many masters starve. Foremost, if simulation time were equal to clock cycle time, master number four would receive a grant too early in the case of a write transaction. Additionally, there are no guarantees that a given amount of simulation time or context switches in the ESL model equates to a certain amount of clock cycles in the RTL. There is, however, a strong indication that the implementation of a monitor is feasible. The monitor can provide warnings or even halt the simulation if the model is not guaranteed to be sound. It can be implemented for fixed and random wait times, as long as \textit{SC\_ZERO\_TIME} is not intermixed with non-zero wait times.     
-
+Some measurements are not shown in the ESL portion of Fig.~\ref{fig:starvation} to keep the graph readable. The measurement for "in range, x$*$wait(0, SC\_PS)" and "in range, x*wait(1, SC\_PS)"  are identical to the "in range, wait(x, SC\_PS)" measurement. 
+Fig.~\ref{fig:starvation} indicates that it is not safe to assume that the ESL model over approximates how many masters starve. We need a guarantee that for example
+six SC\_PS or wait statements in the ESL masters are equivalent to at least 13 clock cycles at the RTL. At the same time, we need constraints or a measurement of
+how many clock cycles are abstracted away within the slaves. \par
+It is feasible to implement a monitor which keeps track of the transfer types and rates of the masters. If any safety limit is violated, the simulation is aborted 
+and the user is notified.
+  
 
 \section{Experimental Results}
  
@@ -627,7 +631,7 @@ The simulation models introduced in Sec.~\ref{sec:sim} were run on a range of co
 \begin{tikzpicture}[scale=0.6]
 \begin{axis}[
     title={Simulation time, $10^6$ transactions},
-    xlabel={N.o. Slaves},
+    xlabel={Number of Slaves},
     ylabel={Time in seconds},
     xmin=1, xmax=15,
     ymin=0, ymax=300,
@@ -719,7 +723,7 @@ The amount of properties generated depend exclusively on the number of slaves co
 \begin{tikzpicture}[scale=0.5]
 \begin{axis}[
     title={Generated properties},
-    xlabel={N.o. Slaves},
+    xlabel={Number of Slaves},
     ylabel={Property count},
     xmin=1, xmax=15,
     ymin=0, ymax=250,
@@ -749,7 +753,7 @@ The amount of properties generated depend exclusively on the number of slaves co
 \begin{tikzpicture}[scale=0.5]
 \begin{axis}[
     title={Proof times},
-    xlabel={N.o. Slaves},
+    xlabel={Number of Slaves},
     ylabel={Time in minutes},
     xmin=1, xmax=15,
     ymin=0, ymax=2200,
@@ -824,7 +828,7 @@ The amount of properties generated depend exclusively on the number of slaves co
 \label{fig:proof}
 \end{figure}
 
-Fig.~\ref{fig:proof} shows a strong dependency between amount of masters in the configuration and proof time. The property proof is measured and run with a single core. The property check is highly parallelizable, however, although running the property check with multiple cores reduced the total perceived time, it increased the total measured time by a factor of five in one configuration. This is possibly due to the resource management of the server in which the property checks were run. For that reason, all configurations are run with a single core. A number of the properties for configurations with one or two masters are vacuous, or have a witness that is unreachable. This is due to the FSM of the ESL model, which always includes transition possibilities for configurations of three masters and above. This, as a result, reduces the total proof time of the configuration in relation to amount
+Fig.~\ref{fig:proof} shows a strong dependency between amount of masters in the configuration and proof time. The property proof is measured and run with a single core.The property check is highly parallelizable, however, although running the property check with multiple cores reduced the total perceived time, it increased the total measured time by a factor of five in one configuration. This is possibly due to the resource management of the server in which the property checks were run. For that reason, all configurations are run with a single core. A number of the properties for configurations with one or two masters are vacuous, or have a witness that is unreachable. This is due to the FSM of the ESL model, which always includes transition possibilities for configurations of three masters and above. This, as a result, reduces the total proof time of the configuration in relation to amount
 of properties.
 \section{Concept: Burst Transfers}
 \label{sec:burst}
