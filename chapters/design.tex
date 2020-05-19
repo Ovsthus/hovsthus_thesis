@@ -437,9 +437,13 @@ The simulations are run for $10^6$ transfers, which are counted within the slave
 \subsection{Starvation}
 \label{sub:starvation}
 One drawback of fixed-priority arbitration is that lower priority masters may never be granted access to the bus. When this occurs depend on the amount of masters, the rate of transfer for each master and the duration of each transfer. \par
-Because starvation is inherently time-dependent some occurrences of starvation are not accurately captured in the untimed ESL simulation model. The rate of transfer depends not only on the rate of which a master writes to its agent, it also depends on whether the transfer is a write, read, successful or to the default slave. Furthermore, the delay within the masters and slaves play a part. \par
-If all masters write as rapid as possible within the slave range, it is all but the three highest priority masters which starve in both models. If this shifts to outside the slave range, it is all but the four highest priority master which starve at the RTL, but the ESL remains the same. A similar discrepancy occurs if a delay is added between transfers in the masters and the transfer direction switches between read and write. \par
-It is vital that an ESL simulation of a more elaborate system represent starvation adequately. The most important aspect of modeling starvation is that the ESL simulation does not show that a master can complete its task, when it actually starves forever in the RTL model. The two given examples indicate that the ESL simulation over approximates how many masters in the system are starving. If this is always true, the ESL model is sound with respect to starvation. \par
+Starvation is inherently a time- or rate-dependent issue, which will not be accurately reflected in the untimed ESL model. What is important, is that the ESL
+model does not indicate that a master is granted access when the RTL shows otherwise. If the ESL model over-approximates starvation, a master that is granted
+at the ESL will always be granted at the RTL. If a master starves at the RTL it will always starve at the ESL, in other words, it is safe to simulate any configuration. \par 
+The first possible occurrence of starvation is at the fourth master. Consider a scenario where there are masters in both transfer phases with both the third and fourth master requesting. When the first master finishes the data phase, the third master is granted. If the first master returns to request anew before the second
+master finishes its data phase, the fourth master starves. \par
+It is the proportion of the transfer rates of the masters to the length of the data phase of following masters which determines possible starvation. What determines if starvation is over- or under-approximated is this proportion compared between the ESL and RTL. Two slaves carrying out different operations can
+have different levels of abstraction. The length of the data phase may differ greatly between the slaves at the RTL, but can remain the equal at the ESL.\par   
 Incrementing delays are temporarily inserted in the simulation models to provide some metrics for when starvation occurs. The masters are configured to wait for a certain time between each transfer, which is incremented after a certain number of transactions. When a master is granted access to the bus, it writes a message to the terminal which delay it required to receive a grant. The data for both models are shown graphically in Fig.~\ref{fig:starvation}. The ESL model is tested with different types of delays. The delays which are encountered in a real simulation model are wait statements called by port interfaces, which are either waiting for an event or for a certain time in picoseconds. Wait statements are also called when an important state is explicitly inserted. These wait statements cause a context switch and this thread is paused until the simulation has caught up with the time increment. \par
 With random delays, the results are equal as with fixed delay if the amount of transfers between increments is high enough. For the random wait examples, the SystemC-PPA ports wait between one and $y$ picoseconds, whereas the masters wait between one and $x$ picoseconds. To reduce variability, $x$ is incremented after $5*10^5$ transactions.      
 
@@ -592,11 +596,10 @@ With random delays, the results are equal as with fixed delay if the amount of t
 \end{figure}
 
 Some measurements are not shown in the ESL portion of Fig.~\ref{fig:starvation} to keep the graph readable. The measurement for "in range, x$*$wait(0, SC\_PS)" and "in range, x*wait(1, SC\_PS)"  are identical to the "in range, wait(x, SC\_PS)" measurement. 
-Fig.~\ref{fig:starvation} indicates that it is not safe to assume that the ESL model over approximates how many masters starve. We need a guarantee that for example
-six SC\_PS or wait statements in the ESL masters are equivalent to at least 13 clock cycles at the RTL. At the same time, we need constraints or a measurement of
-how many clock cycles are abstracted away within the slaves. \par
-It is feasible to implement a monitor which keeps track of the transfer types and rates of the masters. If any safety limit is violated, the simulation is aborted 
-and the user is notified.
+Fig.~\ref{fig:starvation} indicates that it is not safe to assume that the ESL model over approximates how many masters starve. There is no guarantee that for example six SC\_PS or wait statements in masters at the ESL always equate to at least 13 clock cycles at the RTL. There are also no mesurements for how many clock
+cycles are represented in an abstract slave. \par
+It is possible to implement a monitor which keeps track of transfer types. It may possibly contain information on abstraction within the slaves and/or masters.
+In any case, if a safety constraint is exceeded, the monitor can halt the simulation and notify the user.  
   
 
 \section{Experimental Results}

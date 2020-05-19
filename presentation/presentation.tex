@@ -9,7 +9,7 @@
 \usepackage{pgfplotstable}
 \usepackage{pgfplots}
 \pgfplotsset{width=13cm,compat=1.9}
-
+\definecolor{DARKGREEN}{RGB}{0,100,0}
 \usepackage{listings}
 \colorlet{mygray}{black!30}
 \colorlet{mygreen}{green!60!blue}
@@ -95,17 +95,30 @@
 %\beamertemplatenavigationsymbolsempty
 %\setbeameroption{show notes on second screen=left}
 
+
 \title{Multilevel Hardware Generation and Verification}
 \subtitle{Presentation of master thesis}
 \author{Harald Øvsthus}
-
+ \setbeamertemplate{navigation symbols}
+{  \insertslidenavigationsymbol 
+\insertframenavigationsymbol   
+\insertsubsectionnavigationsymbol  
+  \insertsectionnavigationsymbol
+  \insertdocnavigationsymbol  
+  \insertbackfindforwardnavigationsymbol 
+ \hspace{1em}  
+\usebeamerfont{footline} 
+   \insertframenumber/\inserttotalframenumber }
+ \setcounter{page}{1} 
+\pagenumbering{arabic} 
 \begin{document}
 	\begin{frame}[plain]
-
+\addtocounter{framenumber}{-1}
 		\titlepage
 	\end{frame}
 
 	\begin{frame}
+\addtocounter{framenumber}{-1}
 		\frametitle{Contents of presentation}
 		\tableofcontents
 	\end{frame}
@@ -125,7 +138,112 @@
                     \end{enumerate}     
 	\end{frame}
 
-       \section{RTL overview}
+\section{Generator}
+ \begin{frame}
+  \frametitle{Generator}
+   \begin{center}
+   \includegraphics[scale=0.5]{pics/Gen_flow.png}
+   \end{center}
+ \end{frame}
+
+    
+       \section{ESL overview}
+         \begin{frame}
+          \frametitle{ESL overview}
+             \begin{center}
+             \includegraphics[scale=0.5]{pics/syslev_new.png}
+             \end{center}
+         \end{frame}
+
+      
+         \begin{frame}
+          \frametitle{ESL overview continued}
+          \begin{center}
+          \only<1>{\includegraphics[scale=0.4]{pics/agent_bus_fsm0.png}}
+          \only<2>{\includegraphics[scale=0.4]{pics/agent_bus_fsm1.png}}
+          \only<3>{\includegraphics[scale=0.4]{pics/agent_bus_fsm2.png}}
+          \end{center}
+         \end{frame}
+
+
+\begin{frame}[fragile]
+\frametitle{Bus matrix; slave interface}
+\begin{C++}
+if(state == data)
+  if(payload.haddr == slave_range){
+    agent_to_bus->get(payload.hwdata);
+
+    bus_to_slave->write(payload):
+    slave_to_bus->read(response);
+
+    bus_to_agent->set(response);
+
+   }else{
+     bus_to_agent->set(error);
+     }
+
+//Handle requests, end data phase
+\end{C++}
+\end{frame}
+ 
+
+         \begin{frame}[fragile]
+           \frametitle{Emulated port, reason}
+            \begin{C++}
+if(mAgent_request0->peek()) //requesting
+else if(mAgent_request1->peek())  
+else if(mAgent_request2->peek())  
+
+if(bus_ready0->peek())
+if(bus_ready1->peek()) //waiting
+if(bus_ready2->peek()) //waiting
+            \end{C++}
+
+         \end{frame}
+
+         \begin{frame}[fragile]
+           \frametitle{Emulated port, internal}
+            \begin{C++}
+update_requests->read() //wait for sync
+
+if(mAgent_request0->peek()) 
+  try_read(); //unblock
+else if(mAgent_request1->peek()) 
+  try_read();  
+else if(mAgent_request2->peek())  
+  try_read();
+
+requests_out->set(requests); //forward requests
+
+if(bus_ready0->peek()) try_read();
+if(bus_ready1->peek()) try_read(); //unblock
+if(bus_ready2->peek()) try_read(); //unblock
+            \end{C++}
+
+         \end{frame}
+
+         \begin{frame}[fragile]
+           \frametitle{Emulated port, bus matrix}
+            \begin{C++}
+//Bus matrix data state
+
+update_requests->try_write();
+requests_in->get(requests);
+
+if(requests.master0){
+//get payload
+}else if(requests.master1){
+
+            \end{C++}
+
+         \end{frame}
+
+
+
+
+
+
+\section{RTL overview}
          \begin{frame}
            \frametitle{RTL overview}
            \begin{columns}
@@ -141,202 +259,116 @@
            \end{columns}
          \end{frame}
 
-       \section{ESL overview}
-         \begin{frame}
-          \frametitle{ESL overview}
-          \begin{columns}
-           \column{0.5\textwidth}
-             \begin{enumerate}
-              \item<1-> Master agent PPA
-               \begin{itemize}
-                \item<1-> Stores and issues request, handles response
-                \item<1-> All act in parallel/pipeline
-                \item<1-> Lowers abstraction, but necessary
-               \end{itemize}
-              \item<2-> Bus matrix PPA
-                \begin{itemize}
-                \item<2-> Includes slave agents
-                \item<2-> Pipelined interaction with master agents
-                \item<2-> Each stage in pipeline is important state
-               \end{itemize}
-             \end{enumerate}
-           \column{0.5\textwidth}
-             \includegraphics[width=\textwidth]{pics/ESL_overview_2.png}
-          \end{columns}
-         \end{frame}
-
-      \subsection{Port emulation}        
-
-         \begin{frame}
-          \frametitle{Port emulation}
-          \begin{columns}
-           \column{0.5\textwidth}
-              \begin{itemize}
-               \item<1-> Up to three masters are pipelined
-               \item<2-> Requests and two transfer phases are handled concurrently
-               \item<3-> Blocking interfaces enable synchronization
-               \item<4-> \alert{Only one blocking read/write per time point allowed}
-              \end{itemize}
-           \column{0.5\textwidth}
-             \only<1>{\includegraphics[width=\textwidth]{pics/port_em_1.png}}
-             \only<2>{\includegraphics[width=\textwidth]{pics/port_em_2.png}}
-             \only<3>{\includegraphics[width=\textwidth]{pics/port_em_3.png}}
-             \only<4>{\includegraphics[width=\textwidth]{pics/port_em_4.png}}
-          \end{columns}
-         \end{frame}
-
-         \begin{frame}
-           \frametitle{Port soundness}
-         \begin{columns}
-           \column{0.5\textwidth}
-             \begin{itemize}
-               \item<1-> Fixed-priority arbitration is easily mirrored
-               \item<2-> No wait statements are called
-               \item<3-> Requests are forwarded 
-               \item<4-> All threads advance synchronized
-             \end{itemize} 
-           \column{0.5\textwidth}
-             \only<1>{\includegraphics[width=\textwidth]{pics/Soundness0.png}}
-             \only<2>{\includegraphics[width=\textwidth]{pics/Soundness1.png}}
-             \only<3>{\includegraphics[width=\textwidth]{pics/Soundness2.png}}
-             \only<4>{\includegraphics[width=\textwidth]{pics/Soundness3.png}}
-
-          \end{columns}
-         \end{frame}
 
        \subsection{Completeness}
        \begin{frame}
         \frametitle{Completeness}
           \begin{enumerate}
-             \item<1-> Master agent completeness
-              \begin{itemize}
-                \item<1-> All I/O listed in completeness description
-                \item<1-> All completeness checks hold, no constraints
-                \item<1-> State added as cluster output
-              \end{itemize}
-             \item<2-> Bus matrix completeness
-              \begin{itemize}
-                \item<2-> Default master state helps determine bus state
-                \item<2-> All I/O listed in completeness description
-                \item<2-> All completeness checks hold, no constraints
-              \end{itemize}
+              \item<1-> All I/O listed in completeness description
+              \item<1-> All completeness checks hold, no constraints
           \end{enumerate}
        \end{frame}
 
        \begin{frame}
          \frametitle{Completeness continued}
            \begin{center}
-           \includegraphics[width=0.3\textwidth]{pics/port_refine.png}
+           \only<1>{\includegraphics[width=\textwidth]{pics/port_refine0.png}}
+           \only<2>{\includegraphics[width=\textwidth]{pics/port_refine1.png}}
            \end{center}
-           \fontsize{8pt}{12}\selectfont
-           \only<1,2>{\textcolor{blue}{macro} Agent\_request\_notify := \textit{hbusreqx} \\\textcolor{blue}{macro} Agent\_request\_sync := \textit{hready \textcolor{red!60!blue}{and} \textit{hgrant}} \\\textcolor{blue}{macro} Bus\_ready\_sync := \textit{hready}\\}
-           \only<2>{\textcolor{red}{-----------------\\}}
-           \only<2>{\textcolor{blue}{macro} Requests\_sig\_m0 := \textit{hbusreq0} \\ 
-                    \textcolor{blue}{macro} Requests\_sig\_m1 = \textit{hbusreq1} \\
-                    \textcolor{blue}{macro}  Update\_requests\_notify := \\ \textit{hready0 \textcolor{red!60!blue}{and} hready1 \textcolor{red!60!blue}{or} \\ hready0 \textcolor{red!60!blue}{and} hgrant0 \textcolor{red!60!blue}{or} hready1 \textcolor{red!60!blue}{and} hgrant1}}
+
        \end{frame}
+       \begin{frame}[fragile]
+         \frametitle{Completeness continued}
+       \begin{VHI}
+macro Agent_request_notify := hbusreq0 end macro;
+ 
+
+macro Requests_sig_m0_request := hbusreq0 end macro;
+macro Requests_sig_m1_request := hbusreq1 end macro;
+       \end{VHI}
+       \end{frame}
+
+       \begin{frame}[fragile]
+         \frametitle{Completeness continued}
+       \begin{VHI}
+macro Agent_request_sync := hgrant0 and hready0 end
+
+macro Bus_ready_sync := hready0 end macro;
+
+
+
+Update_requests_notify :=
+hready0 and hready1 or
+hgrant0 and hready0 or
+hgrant1 and hready1
+end macro;
+
+       \end{VHI}
+       \end{frame}
+  
 
        \subsection{Simulation}
 
          \begin{frame}
            \frametitle{Simulation}
-           \begin{columns}
-             \column{0.5\textwidth}
-              \begin{itemize}
-               \item<1-> Testbenches modeled equally at ESL and RTL
-               \item<2-> Dummies perform write and read operations
-               \item<3-> Slave IDs are encoded in data, both directions
-               \item<4-> Assertions catch if wrong slave/master is receives payload 
-              \end{itemize}
-             \column{0.5\textwidth}
-             \includegraphics[width=\textwidth]{pics/tb_esl.png}
-           \end{columns}
+            \begin{center}
+            \only<1>{\includegraphics[scale=0.5]{pics/tb_esl.png}}
+            \only<2>{\includegraphics[scale=0.5]{pics/tb_esl1.png}}
+            \only<3>{\includegraphics[scale=0.5]{pics/tb_esl2.png}}
+            \only<4>{\includegraphics[scale=0.5]{pics/tb_esl3.png}}
+            \end{center}
          \end{frame}
 
         \section{Results}
+
+\begin{frame}
+\frametitle{Resource comparison}
+\begin{table}[hbt] 
+  \begin{tabular}{ l r r r r r}
+  \hline 
+  \hline
+      & \multicolumn{2}{c}{\textbf{\_\_\_\_\_\_}RTL\textbf{\_\_\_\_\_\_}} & \multicolumn{3}{c}{\textbf{\_\_\_\_\_\_\_\_\_\_}PPA\textbf{\_\_\_\_\_\_\_\_\_\_}} \\
+   & inp./out. & FFs & inp./out & var. & states \\
+    \hline
+  AHB & - & 114 & - & 5 & 3 \\
+  
+  Per slave & 107/114 & 193 & 1/1 & - & 2 \\
+ 
+  Per master & 107/114 & 286 & 2/4 & 12 & 5 \\
+    \hline
+    \hline  
+  \end{tabular}
+\caption{AHB system component comparison}
+\label{tab:stats}
+\end{table}
+\end{frame}
+
          \begin{frame}
 \frametitle{Simulation Time Comparison}
-\begin{itemize}
- \item ESL unaffected by latency and size
- \item ESL is $>$ 10x faster than RTL's best case
-\end{itemize}
 \begin{center}
 \begin{tikzpicture}[scale=0.5]
 \begin{axis}[
-    title={Simulation time, $10^6$ transactions},
-    xlabel={N.o. Slaves},
-    ylabel={Time in seconds},
-    xmin=1, xmax=15,
-    ymin=0, ymax=300,
-    xtick={1,5,10,15},
-    ytick={7,50,70,100,150,200,250,300},
-    legend pos=outer north east,
-    ymajorgrids=true,
-    grid style=dashed,
+    ybar,
+    enlargelimits=0.15,
+    legend style={at={(0.5, -0.15)},
+      anchor=north,legend columns=-1},
+    ylabel={T sec},
+    symbolic x coords={1 slave, 5 slaves, 10 slaves, 15 slaves},
+    xtick=data,
+    nodes near coords,
+    nodes near coords align={vertical},
 ]
-\only<1->{\addplot[
-    color=blue,
-    mark=square,
-    ]
-    coordinates {
-    (1,261)(5,266)(10,270)(15,284)
+\only<1>{\addplot coordinates { (1 slave,261)(5 slaves,266)(10 slaves,270)(15 slaves,284) };}
+ 
 
-    };
-    \addlegendentry{RTL, 1 master}}
+\only<1>{\addplot coordinates {(1 slave,161)(5 slaves,166)(10 slaves,180)(15 slaves,195)};}
 
-\only<1->{\addplot[
-    color=blue,
-    mark=*,
-    ]
-    coordinates {
-    (1,161)(5,166)(10,180)(15,195)
-    };
-    \addlegendentry{RTL, 2 masters}}
-
-\only<1->{\addplot[
-    color=red,
-    mark=*,
-    ]
-    coordinates {
-    (1,77)(5,86)(10,103)(15,125)
-    };
-    \addlegendentry{RTL, 3 masters}}
-
-\only<2->{\addplot[
-    color=black,
-    mark=x,
-    ]
-    coordinates {
-   (1,89)(5,96)(10,116)(15,132)
-    };
-    \addlegendentry{RTL, 5 masters}}
-
-\only<2->{\addplot[
-    color=red,
-    mark=square,
-    ]
-    coordinates {
-    (1,93)(5,106)(10,128)(15,138)
-    };
-    \addlegendentry{RTL, 10 masters}}
-
-\only<2->{\addplot[
-    color=black,
-    mark=square,
-    ]
-    coordinates {
-    (1,105)(5,115)(10,136)(15,143)
-    };
-    \addlegendentry{RTL, 15 masters}}
+\only<1>{\addplot coordinates {(1 slave,77)(5 slaves,86)(10 slaves,103)(15 slaves,125)};}
     
-\only<1->{\addplot[
-    color=black,
-    mark=*,
-    ]
-    coordinates {
-    (1,7)(5,7)(10,7)(15,7)
-    };
-    \addlegendentry{ESL, 1-15 masters}}
+\only<1->{\addplot coordinates {(1 slave,7)(5 slaves,7)(10 slaves,7)(15 slaves,7)};}
+\only<1>{\legend{RTL 1 master  , RTL 2 masters  , RTL 3 masters  , ESL all sizes}}
+
+
 \end{axis}
 \end{tikzpicture}
 \end{center}
@@ -344,17 +376,12 @@
 
 \begin{frame}
 \frametitle{Properties and Proof times}
-\begin{itemize}
- \item Property count only depends on slaves
- \item Proof time dependent on masters and slaves
- \item Vacuous/unreachable properties in 1-2 master systems
-\end{itemize}
  \begin{columns}
 \column{0.5\textwidth}
 \begin{tikzpicture}[scale=0.4]
 \begin{axis}[
     title={Generated properties},
-    xlabel={N.o. Slaves},
+    xlabel={Number of Slaves},
     ylabel={Property count},
     xmin=1, xmax=15,
     ymin=0, ymax=250,
@@ -381,7 +408,7 @@
 \begin{tikzpicture}[scale=0.4]
 \begin{axis}[
     title={Proof times},
-    xlabel={N.o. Slaves},
+    xlabel={Number of Slaves},
     ylabel={Time in minutes},
     xmin=1, xmax=15,
     ymin=0, ymax=2200,
@@ -458,41 +485,24 @@
 \subsection{Starvation}
  \begin{frame}
   \frametitle{Starvation}
-   \begin{columns}
-     \column{0.5\textwidth}
-       \begin{itemize}
-         \item<1-> Fixed-priority is vulnerable to starvation
-         \item<2-> How is this time-dependency reflected in an untimed model?
-         \item<3-> Time has two meanings at the ESL: 
-          \begin{enumerate}
-           \item<3-> Simulation time
-           \item<3-> Context switches
-          \end{enumerate}
-         \item<4-> Systems of $>$3 masters are vulnerable 
-       \end{itemize}
-     \column{0.5\textwidth}
-        \only<1>{\includegraphics[width=\textwidth]{pics/starve.png}}
-        \only<2>{\includegraphics[width=\textwidth]{pics/starve2.png}}
-        \only<3>{\includegraphics[width=\textwidth]{pics/starve3.png}}
-        \only<4>{\includegraphics[width=\textwidth]{pics/starve4.png}}
-   \end{columns}
+        \begin{center}
+        \only<1>{\includegraphics[scale=0.5]{pics/Starvation0.png}}
+        \only<2>{\includegraphics[scale=0.5]{pics/Starvation1.png}}
+        \only<3>{\includegraphics[scale=0.5]{pics/Starvation2.png}}
+        \end{center}
  \end{frame}
+
 
 
          \begin{frame}
            \frametitle{Starvation comparison}
-          \only<1>{Simplified model, all rates are equal between masters}
-          \only<2>{SC\_ZERO\_TIME is measured in context switches}
-          \only<3>{Nearly no variation in ESL model}
-          \only<4>{Random times reduces probability of grants}
-          \only<5>{A monitor is feasible, with two restrictions}
           \begin{columns}
              \column{0.5\textwidth}
 \begin{tikzpicture}[scale=0.4]
 \begin{axis}[
-    title={Master grant delay, RTL},
+    title={Starvation, RTL},
     xlabel={Master granted},
-    ylabel={Clock delay between transfers},
+    ylabel={Clock delay},
     xmin=1, xmax=15,
     ymin=0, ymax=60,
     xtick={1,2,3,4,5,6,7,8,9,10,11,12,13,14,15},
@@ -511,7 +521,7 @@
     };
     \addlegendentry{Out of range}}
 
-\only<3->{\addplot[
+\only<2->{\addplot[
     color=purple,
     mark=square,
     ]
@@ -521,7 +531,7 @@
     };
     \addlegendentry{write success}}
 
-\only<3->{\addplot[
+\only<2->{\addplot[
     color=red,
     mark=*,
     ]
@@ -531,7 +541,7 @@
     };
     \addlegendentry{read error}}
 
-\only<3->{\addplot[
+\only<2->{\addplot[
     color=black,
     mark=square,
     ]
@@ -540,7 +550,7 @@
     };
     \addlegendentry{read success}}
 
-\only<3->{\addplot[
+\only<2->{\addplot[
     color=gray,
     mark=square,
     ]
@@ -555,9 +565,9 @@
              \column{0.5\textwidth}
 \begin{tikzpicture}[scale=0.4]
 \begin{axis}[
-    title={Master grant delay, ESL},
+    title={Starvation, ESL},
     xlabel={Master granted},
-    ylabel={x},
+    ylabel={Wait time},
     xmin=1, xmax=15,
     ymin=0, ymax=25,
     xtick={1,2,3,4,5,6,7,8,9,10,11,12,13,14,15},
@@ -567,7 +577,7 @@
     grid style=dashed,
 ]
 
-\only<4->{\addplot[
+\only<3->{\addplot[
    color=red,
     mark=square,
     ]
@@ -575,9 +585,9 @@
     (1,0)(2,0)(3,0)(4,2)(5,3)(6,4)(7,5)(8,6)(9,7)(10,9)(11,11)(12,13)(13,14)(14,21)(15,22)
 
     };
-    \addlegendentry{single wait, in range, random, $y=4$}}
+    \addlegendentry{in range, wait(rand()\%y+1, SC\_PS), $z=4$}}
 
-\only<4->{\addplot[
+\only<3->{\addplot[
    color=blue,
     mark=square,
     ]
@@ -585,11 +595,11 @@
     (1,0)(2,0)(3,0)(4,2)(5,3)(6,4)(7,5)(8,6)(9,7)(10,8)(11,9)(12,11)(13,12)(14,14)(15,16)
 
     };
-    \addlegendentry{single wait, in range, random, $y=2$}}
+    \addlegendentry{in range, wait(rand()\%y+1, SC\_PS), $z=2$}}
 
 
 
-\only<3->{\addplot[
+\only<2->{\addplot[
    color=purple,
     mark=*,
     ]
@@ -597,7 +607,7 @@
     (1,0)(2,0)(3,0)(4,2)(5,3)(7,5)(8,6)(10,8)(12,10)(14,12)(15,13)
 
     };
-    \addlegendentry{single wait, in range, fixed}}
+    \addlegendentry{in range, wait(y, SC\_PS)}}
 
 
 \only<1->{\addplot[ 
@@ -608,17 +618,17 @@
     (1,0)(2,0)(3,0)(4,1)(5,3)(6,4)(7,5)(9,7)(11,9)(13,11)(15,13)
 
     };
-    \addlegendentry{single wait, out of range, fixed wait}}
+    \addlegendentry{out of range, wait(y, SC\_PS)}}
 
-\only<2,5>{\addplot[ 
-  color=red,
-    mark=*,
-    ]
-    coordinates {
-    (1,0)(2,0)(3,0)(4,2)(5,2)(6,4)(7,4)(8,6)(9,6)(10,8)(11,8)(12,10)(13,10)(14,12)(15,12)
-
-    };
-    \addlegendentry{context switch, out of range, SC\_ZERO\_TIME}}
+%\only<2,5>{\addplot[ 
+%  color=red,
+%    mark=*,
+%    ]
+%    coordinates {
+%    (1,0)(2,0)(3,0)(4,2)(5,2)(6,4)(7,4)(8,6)(9,6)(10,8)(11,8)(12,10)(13,10)(14,12)(15,12)
+%
+%    };
+%    \addlegendentry{out of range, y$*$wait(0, SC\_PS)}}
 
 
 \end{axis}
@@ -626,24 +636,6 @@
  \end{columns}
  \end{frame}    
 
-\section{Generator}
- \begin{frame}
-  \frametitle{Generator}
-    \begin{itemize}
-      \item<1-> Hardware generator
-        \begin{enumerate}
-          \item<1-> Reads slave address ranges from customizable file
-          \item<1-> Generates ESL and RTL files
-          \item<1-> Calls plugin with ESL 
-        \end{enumerate}
-      \item<2-> DeSCAM plugin
-        \begin{enumerate}
-          \item<2-> Differentiates between agent and bus matrix
-          \item<2-> Creates a refined property set for agent and bus matrix
-          \item<2-> Generates completeness descriptions
-        \end{enumerate}
-    \end{itemize}
- \end{frame}
 
 \section{Burst transfers}
  \begin{frame}
@@ -657,23 +649,45 @@
  \end{frame}
 
  \begin{frame}[fragile]
-   \frametitle{Bursts continued}
+   \frametitle{Bursts continued} 
  
-  \begin{VHI}
-payload.htrans = seq | seq | seq | nonseq;
+
+\begin{C++}
+if(4-beat incremental){
+payload.htrans = seq | seq | seq | idle;
+//concatenate control signals
+
+payload.haddr1 = address + 4; //word data size
+payload.haddr2 = address + 8;
+//haddr 4-15 = 0
+
 payload.hwdata3 = data3;
 payload.hwdata4 = 0;
+//hwdata 4-15 = 0
 
+shared_out_hwdata = data3; //final values
+shared_out_htrans = idle;  
+}
+
+\end{C++}
+
+\end{frame}
+
+\begin{frame}[fragile]
+ \frametitle{Bursts continued} 
+ 
+\begin{VHI}
 macro hwdata4_sig := 
 if(16-beat burst) then
-prev(hwdata,11)
+prev(hwdata,11)  --align for 16 beats
 elsif(8-beat burst) then
-prev(hwdata,3)
+prev(hwdata,3)   --align for 8 beats
 else
-resize(0,32)
+resize(0,32)     --eliminate for 4 beats
 end if;
 end macro;
-  \end{VHI}
+\end{VHI}
+
  \end{frame}
 
 \begin{frame}
@@ -685,17 +699,28 @@ end macro;
  \end{itemize}
 \end{frame}
 
-\section{Final thoughts}
+\section{Outlook}
 
 \begin{frame}
- \frametitle{What remains}
- \begin{enumerate}
-  \item<1-> Formally verified emulated port
-  \item<2-> Monitor for fixed-priority arbitration
-  \item<3-> Add burst transactions to the generator
-  \item<4-> Add split and retry response types
- \end{enumerate}
+ \frametitle{Outlook}
+ Further research:
+ \begin{itemize}
+  \item<2-> Formally verified emulated port
+  \item<3-> Monitor for fixed-priority arbitration
+ \end{itemize}
 \end{frame}
+
+\subsection{Conclusion}
+
+\begin{frame}
+ \frametitle{Conclusion}
+ \begin{itemize}
+  \item<1-> Generates AHB for single transfers with properties.
+  \item<2-> High level of abstraction is achieved
+  \item<3-> Burst transfers are shown to be feasible
+ \end{itemize}
+\end{frame}
+
 
 \begin{frame}
  Questions?
